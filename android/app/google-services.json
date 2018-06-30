@@ -1,0 +1,42 @@
+{
+  "project_info": {
+    "project_number": "462582380628",
+    "firebase_url": "https://icebreak-1513374365160.firebaseio.com",
+    "project_id": "icebreak-1513374365160",
+    "storage_bucket": "icebreak-1513374365160.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:462582380628:android:44ca711108b839aa",
+        "android_client_info": {
+          "package_name": "com.jozews.ib"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "462582380628-0qb5852tjeor2j9ckhagis5bc4a5p74q.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD-x-kgxexcR-aFTPO2mWwM8DIFmS3IYhk"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

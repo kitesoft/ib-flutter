@@ -1,0 +1,47 @@
+
+name: ib
+description: Find events nearby
+
+version: 1.0.0+1
+
+dependencies:
+
+  flutter:
+    sdk: flutter
+
+  color: any
+
+  cloud_firestore: any
+
+  cupertino_icons: ^0.1.2
+
+  firebase_auth: any
+  firebase_messaging: any
+  firebase_storage: any
+
+  image_picker: any
+  intl: any
+
+  great_circle_distance: any
+
+  location: any
+
+  shared_preferences: any
+
+  tuple: any
+
+dev_dependencies:
+
+  flutter_launcher_icons: "^0.5.2"
+
+  flutter_test:
+    sdk: flutter
+
+flutter:
+
+  uses-material-design: true
+
+flutter_icons:
+  android: true
+  ios: false
+  image_path: "assets/ib_launcher.png"
