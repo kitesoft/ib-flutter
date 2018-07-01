@@ -6,7 +6,6 @@ import 'dart:io';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:http/http.dart';
 
-import 'package:ib/IBDefaults.dart';
 
 class IBMessaging {
 

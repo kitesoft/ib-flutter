@@ -100,7 +100,7 @@ class IBStateWidgetUserSearch extends State<IBWidgetUserSearch> {
                     child: Text(
                       IBLocalString.userSearch,
                       style: TextStyle(
-                          color: isTappedAction ? IBColors.actionTappedDown : Colors.white,
+                          color: isTappedAction ? IBColors.tappedDownLight : Colors.white,
                           fontSize: Theme.of(context).textTheme.title.fontSize,
                           fontWeight: Theme.of(context).textTheme.title.fontWeight
                       ),

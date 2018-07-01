@@ -1,5 +1,4 @@
 
-
 import 'dart:async';
 
 import 'package:tuple/tuple.dart';
@@ -137,18 +136,18 @@ class IBFirestore {
   }
 
 
-  static Future addGroupIdsMembers(IBFirestoreGroup group, List<String> idsMembers) async {
+  static Future addGroupIdsMembers(IBFirestoreGroup group, List<String> idsMembers, {bool add = true}) async {
 
     var completer = Completer();
 
     await collectionGroups.document(group.id).setData({
-      IDS_MEMBERS : idsMembers.asMap().map((_, id) => MapEntry(id, true)),
+      IDS_MEMBERS : idsMembers.asMap().map((_, id) => MapEntry(id, add)),
     }, merge: true);
 
     idsMembers.forEach((id) {
       collectionUsers.document(id).setData({
         IDS_GROUPS : {
-          group.id : true
+          group.id : add
         }
       }, merge: true);
     });
@@ -247,7 +246,7 @@ class IBFirestore {
 
     var completer = Completer();
 
-    groupsPayloads[IBUserApp.current.id] = IBUserApp.current.mapPayload;
+    usersPayloads[IBUserApp.current.id] = IBUserApp.current.mapPayload;
 
     await documentPayloadsUsers.setData({
       IBUserApp.current.id : IBUserApp.current.mapPayload,
@@ -678,6 +677,7 @@ class IBFirestore {
   // ...
   static Stream<Tuple2<List<IBFirestoreEvent>, List<IBFirestoreEvent>>> listenEvents({String idPlace, String idUserCreator, String idUserFollower, bool isActive, String typePlace}) {
 
+    // ignore: close_sinks
     var streamController = StreamController<Tuple2<List<IBFirestoreEvent>, List<IBFirestoreEvent>>>();
 
     Query query = collectionEvents;
@@ -723,6 +723,7 @@ class IBFirestore {
 
   static Stream<Tuple2<List<IBFirestoreEvent>, List<IBFirestoreEvent>>> listenEventsGroup({String idGroup, String idUserCreator, String idUserFollower, bool isActive}) {
 
+    // ignore: close_sinks
     var streamController = StreamController<Tuple2<List<IBFirestoreEvent>, List<IBFirestoreEvent>>>();
 
     Query query = collectionEventsGroup;
@@ -768,6 +769,7 @@ class IBFirestore {
 
   static Stream<Tuple2<List<IBFirestoreEvent>, List<IBFirestoreEvent>>> listenEventsIndexed({String idPlace, String typePlace, String idUserCreator, String idUserFollower, bool isActive, double countFollowersStartAfter, double countFollowersEndAt, int sizeLimit = 6}) {
 
+    // ignore: close_sinks
     var streamController = StreamController<Tuple2<List<IBFirestoreEvent>, List<IBFirestoreEvent>>>();
 
     Query query = collectionEvents;

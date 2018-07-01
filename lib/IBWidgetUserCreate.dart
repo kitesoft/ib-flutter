@@ -22,13 +22,14 @@ typedef void IBWidgetUserCreateCompletion();
 
 class IBWidgetUserCreate extends StatefulWidget {
 
-  final IBWidgetUserCreateCompletion onComplete;
+  final IBWidgetUserCreateCompletion onCreate;
+  final IBWidgetUserCreateCompletion onLogin;
 
-  IBWidgetUserCreate({this.onComplete, Key key}) : super(key: key);
+  IBWidgetUserCreate({this.onCreate, this.onLogin, Key key}) : super(key: key);
 
   @override
   IBStateWidgetUserCreate createState() {
-    return IBStateWidgetUserCreate(onComplete: onComplete);
+    return IBStateWidgetUserCreate(onCreate: onCreate, onLogin: onLogin);
   }
 }
 
@@ -53,9 +54,10 @@ class IBStateWidgetUserCreate extends State<IBWidgetUserCreate> {
   static double spacingVertical = 6.0;
   static double spacingVerticalEdge = 8.0;
 
-  IBWidgetUserCreateCompletion onComplete;
+  IBWidgetUserCreateCompletion onCreate;
+  IBWidgetUserCreateCompletion onLogin;
 
-  IBStateWidgetUserCreate({this.onComplete});
+  IBStateWidgetUserCreate({this.onCreate, this.onLogin});
 
   var fileImage;
 
@@ -131,7 +133,7 @@ class IBStateWidgetUserCreate extends State<IBWidgetUserCreate> {
                       child: Text(
                         isEditMode ? IBLocalString.userCreateEdit : IBLocalString.userCreate,
                         style: TextStyle(
-                            color: isCreateEnabled && (!isEditMode || isEditEnabled) ? isTappedIcon ? IBColors.actionTappedDown : Colors.white : IBColors.actionDisable,
+                            color: isCreateEnabled && (!isEditMode || isEditEnabled) ? isTappedIcon ? IBColors.tappedDownLight : Colors.white : IBColors.actionDisable,
                             fontSize: Theme.of(context).textTheme.title.fontSize,
                             fontWeight: Theme.of(context).textTheme.title.fontWeight
                         ),
@@ -170,7 +172,7 @@ class IBStateWidgetUserCreate extends State<IBWidgetUserCreate> {
         ),
         body: ListView(
           children: <Widget>[
-            onComplete != null ? Container(
+            onCreate != null || onLogin != null ? Container(
               child: Center(
                 child: Text(
                   IBLocalString.userCreateCreate,
@@ -223,8 +225,8 @@ class IBStateWidgetUserCreate extends State<IBWidgetUserCreate> {
                 });
                 IBWidgetApp.pushWidget(IBWidgetUserLogin(onComplete: () {
                   Navigator.pop(context);
-                  if (onComplete != null) {
-                    onComplete();
+                  if (onLogin != null) {
+                    onLogin();
                   }
                 }), context);
               },
@@ -409,8 +411,8 @@ class IBStateWidgetUserCreate extends State<IBWidgetUserCreate> {
     }
     await IBDefaults.setIdUser(IBUserApp.current.id);
     Navigator.pop(context);
-    if (onComplete != null) {
-      onComplete();
+    if (onCreate != null) {
+      onCreate();
     }
   }
 }

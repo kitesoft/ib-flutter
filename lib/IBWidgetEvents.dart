@@ -1,5 +1,5 @@
 
-
+import 'dart:async';
 import 'dart:math';
 
 import 'package:firebase_auth/firebase_auth.dart';
@@ -73,6 +73,7 @@ class IBStateWidgetEvents extends State<IBWidgetEvents> {
 
   var scrollController = ScrollController();
 
+  var streams = List<StreamSubscription>();
 
   @override
   void initState() {
@@ -141,16 +142,35 @@ class IBStateWidgetEvents extends State<IBWidgetEvents> {
         IBFirestore.addUserAppPayload();
       }
 
-      eventsUserAppCreated.addAll(await IBFirestore.getEvents(idUserCreator: IBUserApp.current.id, isActive: true));
-      eventsUserAppCreated.addAll(await IBFirestore.getEventsGroup(idUserCreator: IBUserApp.current.id, isActive: true));
-
-      eventsUserAppFollowing.addAll(await IBFirestore.getEvents(idUserFollower: IBUserApp.current.id, isActive: true));
-      eventsUserAppFollowing.addAll(await IBFirestore.getEventsGroup(idUserFollower: IBUserApp.current.id, isActive: true));
-
-      setState(() {
-        this.eventsUserAppCreated = eventsUserAppCreated;
-        this.eventsUserAppFollowing = eventsUserAppFollowing;
+      // ignore: cancel_subscriptions
+      var stream1 = IBFirestore.listenEvents(idUserCreator: IBUserApp.current.id, isActive: true).listen((tuple) {
+        setState(() {
+          eventsUserAppCreated.addAll(tuple.item1);
+        });
       });
+
+      // ignore: cancel_subscriptions
+      var stream2 = IBFirestore.listenEventsGroup(idUserCreator: IBUserApp.current.id, isActive: true).listen((tuple) {
+        setState(() {
+          eventsUserAppCreated.addAll(tuple.item1);
+        });
+      });
+
+      // ignore: cancel_subscriptions
+      var stream3 = IBFirestore.listenEvents(idUserFollower: IBUserApp.current.id, isActive: true).listen((tuple) {
+        setState(() {
+          eventsUserAppFollowing.addAll(tuple.item1);
+        });
+      });
+
+      // ignore: cancel_subscriptions
+      var stream4 = IBFirestore.listenEventsGroup(idUserFollower: IBUserApp.current.id, isActive: true).listen((tuple) {
+        setState(() {
+          eventsUserAppFollowing.addAll(tuple.item1);
+        });
+      });
+
+      streams.addAll([stream1, stream2, stream3, stream4]);
 
       queries.addAll(IBUserApp.current.idsFollowing.map<IBFirestoreCacheEvents>((userId) => IBFirestoreCacheEvents(idUserCreator: userId, isActive: true)));
       queries.addAll(IBUserApp.current.idsFollowing.map<IBFirestoreCacheEvents>((userId) => IBFirestoreCacheEvents(idUserFollower: userId, isActive: true)));
@@ -216,7 +236,7 @@ class IBStateWidgetEvents extends State<IBWidgetEvents> {
     var query = queries[indexQuery];
 
     if (query.idUserCreator != null) {
-      IBFirestore.listenEvents(idUserCreator: query.idUserCreator, isActive: true).listen((tuple) {
+      var stream = IBFirestore.listenEvents(idUserCreator: query.idUserCreator, isActive: true).listen((tuple) {
         var isLoadFirst = indexQuery < queries.length && queries[indexQuery].idUserCreator == query.idUserCreator;
         var eventsAdded = tuple.item1;
         if (isLoadFirst) {
@@ -249,6 +269,7 @@ class IBStateWidgetEvents extends State<IBWidgetEvents> {
           });
         }
       });
+      streams.add(stream);
     }
     else if (query.idUserFollower != null) {
       var events = await IBFirestore.getEvents(idUserFollower: query.idUserFollower, isActive: true);
@@ -272,7 +293,7 @@ class IBStateWidgetEvents extends State<IBWidgetEvents> {
       }
     }
     else if (query.idGroup != null) {
-      IBFirestore.listenEventsGroup(idGroup: query.idGroup, isActive: true).listen((tuple) {
+      var stream = IBFirestore.listenEventsGroup(idGroup: query.idGroup, isActive: true).listen((tuple) {
         var isLoadFirst = indexQuery < queries.length && queries[indexQuery].idGroup == query.idGroup;
         var eventsAddedOriginal = tuple.item1.where((event) => !this.events.contains(event)).where((event) => !eventsUserAppCreated.contains(event));
         if (isLoadFirst) {
@@ -305,6 +326,7 @@ class IBStateWidgetEvents extends State<IBWidgetEvents> {
           });
         }
       });
+      streams.add(stream);
     }
     else if (query.idPlace != null && (indexQuery == 0 || queries[indexQuery - 1].idPlace != query.idPlace)) {
       var countFollowersStartAfter = query.events != null && query.events.isNotEmpty ? query.events.last.countFollowersDouble : null;
@@ -313,6 +335,9 @@ class IBStateWidgetEvents extends State<IBWidgetEvents> {
         indexQuery += 1;
       }
       var eventsOriginal = events.where((event) => !this.events.contains(event)).where((event) => !eventsUserAppCreated.contains(event));
+      if (IBUserApp.current != null) {
+        eventsOriginal = eventsOriginal.where((event) => !IBUserApp.current.idsFollowing.contains(event.idCreator));
+      }
       if (query.events == null) {
         query.events = events;
       }
@@ -338,7 +363,7 @@ class IBStateWidgetEvents extends State<IBWidgetEvents> {
     }
     else if (query.idPlace != null && (indexQuery > 0 && queries[indexQuery - 1].idPlace == query.idPlace)) {
       var countFollowersStartAfter = query.events != null && query.events.isNotEmpty ? query.events.last.countFollowersDouble : 1.0;
-      IBFirestore.listenEventsIndexed(idPlace: query.idPlace, typePlace: query.typePlace, countFollowersStartAfter: countFollowersStartAfter, isActive: true, sizeLimit: lengthLoadEvents).listen((tuple) {
+      var stream = IBFirestore.listenEventsIndexed(idPlace: query.idPlace, typePlace: query.typePlace, countFollowersStartAfter: countFollowersStartAfter, isActive: true, sizeLimit: lengthLoadEvents).listen((tuple) {
         var isLoadFirst = indexQuery < queries.length && queries[indexQuery].idPlace == query.idPlace;
         var eventsAdded = tuple.item1;
         var eventsAddedOriginal = eventsAdded.where((event) => !this.events.contains(event)).where((event) => !eventsUserAppCreated.contains(event));
@@ -383,6 +408,7 @@ class IBStateWidgetEvents extends State<IBWidgetEvents> {
           });
         }
       });
+      streams.add(stream);
     }
   }
 
@@ -396,7 +422,7 @@ class IBStateWidgetEvents extends State<IBWidgetEvents> {
             child: Container(
               child: Icon(
                 Icons.library_add,
-                color: isTappedActionAdd ? IBColors.actionTappedDown : Colors.white,
+                color: isTappedActionAdd ? IBColors.tappedDownLight : Colors.white,
                 size: sizeActionIcon,
               ),
               padding: EdgeInsets.only(
@@ -421,8 +447,10 @@ class IBStateWidgetEvents extends State<IBWidgetEvents> {
                 IBWidgetApp.pushWidget(IBWidgetEventCreate(), context);
               }
               else {
-                IBWidgetApp.pushWidget(IBWidgetUserCreate(onComplete: () {
+                IBWidgetApp.pushWidget(IBWidgetUserCreate(onCreate: () {
                   IBWidgetApp.pushWidget(IBWidgetEventCreate(), context);
+                }, onLogin: () {
+                  login();
                 }), context);
               }
             },
@@ -503,14 +531,16 @@ class IBStateWidgetEvents extends State<IBWidgetEvents> {
                 width: sizeActionUserApp,
               ),
               onTapUp: (_) {
-                IBWidgetApp.pushWidget(IBWidgetUser(user: IBUserApp.current), context);
+                IBWidgetApp.pushWidget(IBWidgetUser(user: IBUserApp.current, onLogout: () {
+                  logout();
+                }), context);
               },
             );
           }) : GestureDetector(
               child: Container(
                 child: Icon(
                   Icons.person,
-                  color: isTappedActionUser ? IBColors.actionTappedDown : Colors.white,
+                  color: isTappedActionUser ? IBColors.tappedDownLight : Colors.white,
                   size: sizeActionIcon,
                 ),
                 margin: EdgeInsets.only(
@@ -531,7 +561,9 @@ class IBStateWidgetEvents extends State<IBWidgetEvents> {
                 setState(() {
                   isTappedActionUser = false;
                 });
-                IBWidgetApp.pushWidget(IBWidgetUserCreate(), context);
+                IBWidgetApp.pushWidget(IBWidgetUserCreate(onLogin: () {
+                  login();
+                }), context);
               }
           ),
         ],
@@ -621,5 +653,29 @@ class IBStateWidgetEvents extends State<IBWidgetEvents> {
         ],
       ),
     );
+  }
+
+  login() {
+
+    isDoneLoading = false;
+    isLoading = false;
+
+    events.clear();
+    eventsPageNew.clear();
+    queries.clear();
+    indexQuery = 0;
+    countEventsNew = 0;
+
+    streams.forEach((stream) {
+      stream.cancel();
+    });
+
+    setupAsync();
+  }
+
+  logout() {
+    streams.forEach((stream) {
+      stream.cancel();
+    });
   }
 }

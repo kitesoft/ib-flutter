@@ -5,9 +5,9 @@ class IBColors {
 
   static var actionDisable = Colors.white70;
 
-  static var actionTappedDown = Colors.white30;
+  static var tappedDownLight = Colors.white30;
 
-  static var buttonTappedDown = logo;
+  static var tappedDown = logo80;
 
   static var divider = Colors.black26;
 

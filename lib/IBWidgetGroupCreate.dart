@@ -124,7 +124,7 @@ class IBStateWidgetGroupCreate extends State<IBWidgetGroupCreate> {
                     child: Text(
                       isEditMode ? IBLocalString.groupCreateEdit : IBLocalString.groupCreate,
                       style: TextStyle(
-                          color: isCreateEnabled && (!isEditMode || isEditEnabled) ? isTappedIcon ? IBColors.actionTappedDown : Colors.white : IBColors.actionDisable,
+                          color: isCreateEnabled && (!isEditMode || isEditEnabled) ? isTappedIcon ? IBColors.tappedDownLight : Colors.white : IBColors.actionDisable,
                           fontSize: Theme.of(context).textTheme.title.fontSize,
                           fontWeight: Theme.of(context).textTheme.title.fontWeight
                       ),

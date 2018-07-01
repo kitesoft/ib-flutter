@@ -92,7 +92,7 @@ class IBStateWidgetUserLogin extends State<IBWidgetUserLogin> {
                       child: Text(
                         IBLocalString.userLogin,
                         style: TextStyle(
-                            color: isLoginEnabled ? isTappedIcon ? IBColors.actionTappedDown : Colors.white : IBColors.actionDisable,
+                            color: isLoginEnabled ? isTappedIcon ? IBColors.tappedDownLight : Colors.white : IBColors.actionDisable,
                             fontSize: Theme.of(context).textTheme.title.fontSize,
                             fontWeight: Theme.of(context).textTheme.title.fontWeight
                         ),
@@ -161,20 +161,36 @@ class IBStateWidgetUserLogin extends State<IBWidgetUserLogin> {
         body: ListView(
           children: <Widget>[
             isInputIncorrect ? Container(
-              child: Center(
-                child: Text(
-                  IBLocalString.userLoginInputIncorrect,
-                  style: TextStyle(
-                      fontWeight: FontWeight.w400,
-                      fontStyle: FontStyle.italic
+              child: Row(
+                children: <Widget>[
+                  Container(
+                    child: Icon(
+                      Icons.clear,
+                      color: Colors.red,
+                    ),
                   ),
-                ),
+                  Container(
+                    child: Center(
+                      child: Text(
+                        IBLocalString.userLoginInputIncorrect,
+                        style: TextStyle(
+                            fontWeight: FontWeight.w400,
+                            fontStyle: FontStyle.italic
+                        ),
+                      ),
+                    ),
+                    margin: EdgeInsets.only(
+                      left: spacingHorizontal/2,
+                    ),
+                  )
+                ],
+                mainAxisAlignment: MainAxisAlignment.center,
               ),
-              padding: EdgeInsets.only(
-                  top: spacingVertical,
-                  left: spacingHorizontal,
-                  right: spacingHorizontal,
-                  bottom: spacingVertical
+              margin: EdgeInsets.only(
+                top: spacingVertical,
+                left: spacingHorizontal,
+                right: spacingHorizontal,
+                bottom: spacingVertical,
               ),
             ) : Container(),
             Container(

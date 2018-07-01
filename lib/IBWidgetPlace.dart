@@ -139,7 +139,7 @@ class IBStateWidgetPlace extends State<IBWidgetPlace> {
                 child: Icon(
                   Icons.done,
                   color: isTappedAction ?
-                  IBColors.actionTappedDown : isUserAppFollowing ?
+                  IBColors.tappedDownLight : isUserAppFollowing ?
                   Colors.white : Colors.white70,
                 ),
                 margin: EdgeInsets.only(
@@ -149,17 +149,11 @@ class IBStateWidgetPlace extends State<IBWidgetPlace> {
               onSelected: (value) {
                 if (value == IBLocalString.placeFollowing) {
                   if (IBUserApp.current != null) {
-                    setState(() {
-                      isUserAppFollowing = !isUserAppFollowing;
-                    });
-                    IBFirestore.followPlace(place, follow: isUserAppFollowing);
+                    follow();
                   }
                   else {
-                    IBWidgetApp.pushWidget(IBWidgetUserCreate(onComplete: () {
-                      setState(() {
-                        isUserAppFollowing = !isUserAppFollowing;
-                      });
-                      IBFirestore.followPlace(place, follow: isUserAppFollowing);
+                    IBWidgetApp.pushWidget(IBWidgetUserCreate(onCreate: () {
+                      follow();
                     }), context);
                   }
                 }
@@ -209,5 +203,18 @@ class IBStateWidgetPlace extends State<IBWidgetPlace> {
           controller: scrollController,
         )
     );
+  }
+
+  follow() {
+    IBFirestore.followPlace(place, follow: !isUserAppFollowing);
+    setState(() {
+      isUserAppFollowing = !isUserAppFollowing;
+      if (isUserAppFollowing) {
+        place.idsFollowers.add(IBUserApp.current.id);
+      }
+      else {
+        place.idsFollowers.remove(IBUserApp.current.id);
+      }
+    });
   }
 }

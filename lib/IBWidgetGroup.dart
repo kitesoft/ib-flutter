@@ -10,6 +10,7 @@ import 'package:ib/IBFirestoreEvent.dart';
 import 'package:ib/IBFirestoreGroup.dart';
 import 'package:ib/IBFirestoreUser.dart';
 import 'package:ib/IBLocalString.dart';
+import 'package:ib/IBUserApp.dart';
 
 import 'package:ib/IBWidgetApp.dart';
 import 'package:ib/IBWidgetEvent.dart';
@@ -105,7 +106,7 @@ class IBStateWidgetGroup extends State<IBWidgetGroup> {
             child: Container(
               child: Icon(
                 Icons.more_vert,
-                color: isTappedAction ? IBColors.actionTappedDown : Colors.white,
+                color: isTappedAction ? IBColors.tappedDownLight : Colors.white,
               ),
               margin: EdgeInsets.only(
                   right: spacingHorizontal
@@ -120,11 +121,12 @@ class IBStateWidgetGroup extends State<IBWidgetGroup> {
               }
               else if (value == IBLocalString.groupActionAddMembers) {
                 IBWidgetApp.pushWidget(IBWidgetUserSearch(idsExclude: group.idsMembers, onSelect: (usersPayloadsSelected) {
-                  IBFirestore.addGroupIdsMembers(group, usersPayloadsSelected.map((userPayload) => userPayload.id).toList());
+                  addIdsMembers(usersPayloadsSelected);
                 }), context);
               }
               else if (value == IBLocalString.groupActionLeave) {
-                // TODO: IMPLEMENT LEAVE
+                IBFirestore.addGroupIdsMembers(group, [IBUserApp.current.id], add: false);
+                Navigator.pop(context);
               }
             },
             itemBuilder: (BuildContext context) {
@@ -354,4 +356,16 @@ class IBStateWidgetGroup extends State<IBWidgetGroup> {
       ) : Container(),
     );
   }
+
+  addIdsMembers(List<IBFirestoreUser> usersPayloads) {
+
+    var idsMembers = usersPayloads.map((userPayload) => userPayload.id).toList();
+    IBFirestore.addGroupIdsMembers(group, idsMembers);
+
+    setState(() {
+      group.idsMembers.addAll(idsMembers);
+      usersPayloadsMembers = group.idsMembers.map<IBFirestoreUser>((id) => IBFirestoreUser.firestore(id, IBFirestore.usersPayloads[id])).toList();
+    });
+  }
 }
+

@@ -182,7 +182,7 @@ class IBStateWidgetEventCreate extends State<IBWidgetEventCreate> {
                       event != null ? IBLocalString.eventCreateEdit : IBLocalString.eventCreate,
                       style: TextStyle(
                           color: isCreateEnabled && (!isEditMode || isEditEnabled) ?
-                          isIcon1TappedDown ? IBColors.actionTappedDown : Colors.white :
+                          isIcon1TappedDown ? IBColors.tappedDownLight : Colors.white :
                           IBColors.actionDisable,
                           fontSize: Theme.of(context).textTheme.title.fontSize,
                           fontWeight: Theme.of(context).textTheme.title.fontWeight
@@ -429,7 +429,7 @@ class IBStateWidgetEventCreate extends State<IBWidgetEventCreate> {
                               Text(
                                 dayStart != null ? IBLocalString.eventCreateFormatDay(dayStart) : IBLocalString.eventCreateSelectDay,
                                 style: TextStyle(
-                                    color: isTappedStartDate ? IBColors.buttonTappedDown : Colors.black,
+                                    color: isTappedStartDate ? IBColors.tappedDown : Colors.black,
                                     fontSize: 16.0
                                 ),
                               ),
@@ -483,7 +483,7 @@ class IBStateWidgetEventCreate extends State<IBWidgetEventCreate> {
                               Text(
                                 timeOfDayStart != null ? timeOfDayStart.format(context) : IBLocalString.eventCreateSelectTimeOfDay,
                                 style: TextStyle(
-                                    color: isTappedStartTimeOfDate ? IBColors.buttonTappedDown : Colors.black,
+                                    color: isTappedStartTimeOfDate ? IBColors.tappedDown : Colors.black,
                                     fontSize: 16.0
                                 ),
                               ),
@@ -550,7 +550,7 @@ class IBStateWidgetEventCreate extends State<IBWidgetEventCreate> {
                               Text(
                                 dayEnd != null ? IBLocalString.eventCreateFormatDay(dayEnd) : IBLocalString.eventCreateSelectDay,
                                 style: TextStyle(
-                                    color: isTappedEndDate ? IBColors.buttonTappedDown : Colors.black,
+                                    color: isTappedEndDate ? IBColors.tappedDown : Colors.black,
                                     fontSize: 16.0
                                 ),
                               ),
@@ -604,14 +604,14 @@ class IBStateWidgetEventCreate extends State<IBWidgetEventCreate> {
                               Text(
                                 timeOfDayEnd != null ? timeOfDayEnd.format(context) : IBLocalString.eventCreateSelectTimeOfDay,
                                 style: TextStyle(
-                                    color: isTappedEndTimeOfDate ? IBColors.buttonTappedDown : Colors.black,
+                                    color: isTappedEndTimeOfDate ? IBColors.tappedDown : Colors.black,
                                     fontSize: 16.0
                                 ),
                               ),
                               Container(
                                 child: Icon(
                                   !isEndTimeOfDayValid ? Icons.clear : Icons.done,
-                                  color: timeOfDayEnd != null && isEndTimeOfDayValid ? IBColors.logo : Colors.grey,
+                                  color: timeOfDayEnd != null && isEndTimeOfDayValid ? IBColors.logo : Colors.red,
                                 ),
                                 margin: EdgeInsets.only(
                                     left: spacingHorizontal/2

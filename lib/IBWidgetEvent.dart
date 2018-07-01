@@ -14,7 +14,6 @@ import 'package:ib/IBWidgetApp.dart';
 import 'package:ib/IBWidgetEventCreate.dart';
 import 'package:ib/IBWidgetGroup.dart';
 import 'package:ib/IBWidgetPlace.dart';
-import 'package:ib/IBWidgetTapText.dart';
 import 'package:ib/IBWidgetUser.dart';
 import 'package:ib/IBWidgetUsersPayloads.dart';
 import 'package:ib/IBWidgetUserCreate.dart';
@@ -50,12 +49,7 @@ class IBStateWidgetEvent extends State<IBWidgetEvent> {
 
   var isUserAppFollowing = false;
 
-  List<String> get idsFollowersShown {
-    if (IBUserApp.current == null) {
-      return [];
-    }
-    return event.idsFollowers.toSet().intersection(IBUserApp.current.idsFollowing.toSet()).toList();
-  }
+  var idsFollowersShown = List<String>();
 
   IBFirestoreUser userPayloadCreator;
   List<IBFirestoreUser> usersPayloadsFollowersShown;
@@ -68,6 +62,7 @@ class IBStateWidgetEvent extends State<IBWidgetEvent> {
 
     if (IBUserApp.current != null) {
       isUserAppFollowing = event.idsFollowers.contains(IBUserApp.current.id);
+      idsFollowersShown = event.idsFollowers.toSet().intersection(IBUserApp.current.idsFollowing.toSet()).toList();
     }
 
     if (event.idGroup != null) {
@@ -128,22 +123,28 @@ class IBStateWidgetEvent extends State<IBWidgetEvent> {
                         left: spacingHorizontal/2// adjustment to center with title
                     )
                 ) : Container(),
-                groupPayload != null ? Container(
-                  child: IBWidgetTapText(
+                groupPayload != null ? GestureDetector(
+                  child: Container(
+                    child: Text(
                       IBLocalString.eventGroup(groupPayload.name),
                       style: TextStyle(
                           fontSize: 14.0,
                           fontWeight: FontWeight.w400,
                           fontStyle: FontStyle.italic
                       ),
-                      onTap: () {
-                        IBWidgetApp.pushWidget(IBWidgetGroup(groupPayload), context);
-                      }
+                    ),
+                    margin: EdgeInsets.only(
+                      top: spacingVerticalEdge,
+                      left: spacingHorizontal,
+                    ),
                   ),
-                  margin: EdgeInsets.only(
-                    top: spacingVerticalEdge,
-                    left: spacingHorizontal,
-                  ),
+                  onTapCancel: () {
+                  },
+                  onTapDown: (_) {
+                  },
+                  onTapUp: (_) {
+                    IBWidgetApp.pushWidget(IBWidgetGroup(groupPayload), context);
+                  },
                 ) : Container(),
               ],
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -166,37 +167,49 @@ class IBStateWidgetEvent extends State<IBWidgetEvent> {
             ),
             Row(
               children: <Widget>[
-                Container(
-                  child: IBWidgetTapText(
-                    event.placePayload.name,
-                    style: TextStyle(
-                      fontSize: 14.0,
-                      fontWeight: FontWeight.w400,
+                GestureDetector(
+                  child: Container(
+                    child: Text(
+                      event.placePayload.name,
+                      style: TextStyle(
+                        fontSize: 14.0,
+                        fontWeight: FontWeight.w400,
+                      ),
                     ),
-                    onTap: () {
-                      IBWidgetApp.pushWidget(IBWidgetPlace(event.placePayload), context);
-                    },
-                  ),
-                  margin: EdgeInsets.only(
-                    top: spacingVertical,
-                    left: spacingHorizontal,
-                  ),
-                ),
-                Container(
-                  child: IBWidgetTapText(
-                    event.payloadPlaceCity.name,
-                    style: TextStyle(
-                      fontSize: 14.0,
-                      fontWeight: FontWeight.w400,
-                    ),
-                    onTap: () {
-                      IBWidgetApp.pushWidget(IBWidgetPlace(event.payloadPlaceCity), context);
-                    },
-                  ),
-                  margin: EdgeInsets.only(
+                    margin: EdgeInsets.only(
                       top: spacingVertical,
-                      left: spacingHorizontal/2
+                      left: spacingHorizontal,
+                    ),
                   ),
+                  onTapCancel: () {
+                  },
+                  onTapDown: (_) {
+                  },
+                  onTapUp: (_) {
+                    IBWidgetApp.pushWidget(IBWidgetPlace(event.placePayload), context);
+                  },
+                ),
+                GestureDetector(
+                  child: Container(
+                    child: Text(
+                      event.payloadPlaceCity.name,
+                      style: TextStyle(
+                        fontSize: 14.0,
+                        fontWeight: FontWeight.w400,
+                      ),
+                    ),
+                    margin: EdgeInsets.only(
+                        top: spacingVertical,
+                        left: spacingHorizontal/2
+                    ),
+                  ),
+                  onTapCancel: () {
+                  },
+                  onTapDown: (_) {
+                  },
+                  onTapUp: (_) {
+                    IBWidgetApp.pushWidget(IBWidgetPlace(event.payloadPlaceCity), context);
+                  },
                 ),
               ],
             ),
@@ -236,16 +249,22 @@ class IBStateWidgetEvent extends State<IBWidgetEvent> {
                     ),
                     width: 18.0,
                   ),
-                  IBWidgetTapText(
-                    userPayloadCreator.name,
-                    style: TextStyle(
-                      fontSize: 14.0,
-                      fontWeight: FontWeight.w400,
+                  GestureDetector(
+                    child: Text(
+                      userPayloadCreator.name,
+                      style: TextStyle(
+                        fontSize: 14.0,
+                        fontWeight: FontWeight.w400,
+                      ),
                     ),
-                    onTap: () {
+                    onTapCancel: () {
+                    },
+                    onTapDown: (_) {
+                    },
+                    onTapUp: (_) {
                       IBWidgetApp.pushWidget(IBWidgetUser(userPayload: userPayloadCreator), context);
                     },
-                  )
+                  ),
                 ],
                 runSpacing: spacingVertical/2,
                 spacing: spacingHorizontal/2,
@@ -261,8 +280,8 @@ class IBStateWidgetEvent extends State<IBWidgetEvent> {
                   Text(
                     IBLocalString.eventFollowedBy,
                     style: TextStyle(
-                        fontSize: 14.0,
-                        fontWeight: FontWeight.w400,
+                      fontSize: 14.0,
+                      fontWeight: FontWeight.w400,
                     ),
                     textAlign: TextAlign.left,
                   )
@@ -276,24 +295,37 @@ class IBStateWidgetEvent extends State<IBWidgetEvent> {
                     ),
                     width: 18.0,
                   ),
-                  IBWidgetTapText(
-                    userPayload.name,
-                    style: TextStyle(
-                      fontSize: 14.0,
-                      fontWeight: FontWeight.w400,
+                  GestureDetector(
+                    child: Text(
+                      userPayload.name,
+                      style: TextStyle(
+                        fontSize: 14.0,
+                        fontWeight: FontWeight.w400,
+                      ),
                     ),
-                    onTap: () {
+                    onTapCancel: () {
+                    },
+                    onTapDown: (_) {
+                    },
+                    onTapUp: (_) {
                       IBWidgetApp.pushWidget(IBWidgetUser(userPayload: userPayload), context);
                     },
-                  )
-                ]).expand((list) => list).toList() + (event.idsFollowers.length > idsFollowersShown.length ? [
-                  IBWidgetTapText(
-                    IBLocalString.eventMoreFollowersCount(event.idsFollowers.length - idsFollowersShown.length),
-                    onTap: () {
-                      IBWidgetApp.pushWidget(IBWidgetUsersPayloads(true, event.idsFollowers, event.name), context);
-                    },
-                  )
-                ] : []),
+                  ),
+                ]).expand((list) => list).toList() +
+                    (event.idsFollowers.length > idsFollowersShown.length ? [
+                      GestureDetector(
+                        child: Text(
+                          IBLocalString.eventMoreFollowersCount(event.idsFollowers.length - idsFollowersShown.length),
+                        ),
+                        onTapCancel: () {
+                        },
+                        onTapDown: (_) {
+                        },
+                        onTapUp: (_) {
+                          IBWidgetApp.pushWidget(IBWidgetUsersPayloads(true, event.idsFollowers, event.name), context);
+                        },
+                      ),
+                    ] : []),
                 runSpacing: spacingVertical/2,
                 spacing: spacingHorizontal/2,
               ),
@@ -302,24 +334,26 @@ class IBStateWidgetEvent extends State<IBWidgetEvent> {
                   left: spacingHorizontal,
                   bottom: spacingVerticalEdge
               ),
-            ) : Container(
-              child: IBWidgetTapText(
-                event.idsFollowers.isEmpty ? IBLocalString.eventNoFollowers : IBLocalString.eventFollowersCount(event.idsFollowers.length),
-                style: TextStyle(
-                    fontStyle: event.idsFollowers.isEmpty ? FontStyle.italic : FontStyle.normal
+            ) : GestureDetector(
+              child: Container(
+                child: Text(
+                  event.idsFollowers.isEmpty ? IBLocalString.eventNoFollowers : IBLocalString.eventFollowersCount(event.idsFollowers.length),
+                  style: TextStyle(
+                      fontStyle: event.idsFollowers.isEmpty ? FontStyle.italic : FontStyle.normal
+                  ),
                 ),
-                onTap: () {
-                  if (event.idsFollowers.isNotEmpty) {
-                    IBWidgetApp.pushWidget(IBWidgetUsersPayloads(true, event.idsFollowers, event.name), context);
-                  }
-                },
-                isEnabledOnTap: event.idsFollowers.isNotEmpty,
+                margin: EdgeInsets.only(
+                    top: spacingVertical,
+                    left: spacingHorizontal,
+                    bottom: spacingVerticalEdge
+                ),
               ),
-              margin: EdgeInsets.only(
-                  top: spacingVertical,
-                  left: spacingHorizontal,
-                  bottom: spacingVerticalEdge
-              ),
+              onTapCancel: () {
+              },
+              onTapDown: (_) {
+              },
+              onTapUp: (_) {
+              },
             ),
             Container(
               color: IBColors.divider,
@@ -348,9 +382,7 @@ class IBStateWidgetEvent extends State<IBWidgetEvent> {
                 ),
               ),
               itemBuilder: (BuildContext context) {
-
                 var items = List<PopupMenuItem<String>>();
-
                 if (IBUserApp.currentId != event.idCreator) {
                   items.add(
                       PopupMenuItem<String>(
@@ -390,24 +422,11 @@ class IBStateWidgetEvent extends State<IBWidgetEvent> {
               onSelected: (value) async {
                 if (value == IBLocalString.eventActionFollowing) {
                   if (IBUserApp.current != null) {
-                    setState(() {
-                      isUserAppFollowing = !isUserAppFollowing;
-                    });
-                    await IBFirestore.followEvent(event, follow: isUserAppFollowing);
-                    setState(() { });
-                    // send message
-                    event.idsFollowers.forEach((id) {
-                      var userPayload = IBFirestore.usersPayloads[id];
-                      IBMessaging.send(event.name, IBLocalString.eventMessageFollower(IBUserApp.current.name, userPayload.codeLanguage ?? "es"), {IBFirestore.ID_EVENT : event.id}, userPayload.token);
-                    });
+                    follow();
                   }
                   else {
-                    IBWidgetApp.pushWidget(IBWidgetUserCreate(onComplete: () async {
-                      setState(() {
-                        isUserAppFollowing = !isUserAppFollowing;
-                      });
-                      await IBFirestore.followEvent(event, follow: isUserAppFollowing);
-                      setState(() { });
+                    IBWidgetApp.pushWidget(IBWidgetUserCreate(onCreate: () {
+                      follow();
                     }), context);
                   }
                 }
@@ -420,5 +439,25 @@ class IBStateWidgetEvent extends State<IBWidgetEvent> {
         ),
       ],
     );
+  }
+
+  follow() {
+    IBFirestore.followEvent(event, follow: !isUserAppFollowing);
+    setState(() {
+      isUserAppFollowing = !isUserAppFollowing;
+      if (isUserAppFollowing) {
+        event.idsFollowers.add(IBUserApp.current.id);
+      }
+      else {
+        event.idsFollowers.remove(IBUserApp.current.id);
+      }
+      idsFollowersShown = event.idsFollowers.toSet().intersection(IBUserApp.current.idsFollowing.toSet()).toList();
+    });
+    if (isUserAppFollowing) {
+      (event.idsFollowers + IBUserApp.current.idsFollowers).forEach((id) {
+        var userPayload = IBFirestore.usersPayloads[id];
+        IBMessaging.send(event.name, IBLocalString.eventMessageFollower(IBUserApp.current.name, userPayload[IBFirestore.CODE_LANGUAGE] ?? "es"), {IBFirestore.ID_EVENT : event.id}, userPayload[IBFirestore.TOKEN]);
+      });
+    }
   }
 }
