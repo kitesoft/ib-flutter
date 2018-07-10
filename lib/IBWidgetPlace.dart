@@ -27,13 +27,13 @@ class IBWidgetPlace extends StatefulWidget {
 
 class IBStateWidgetPlace extends State<IBWidgetPlace> {
 
-  static const lengthLoadEvents = 5;
+  static const LENGTH_LOAD_EVENTS = 5;
 
-  static const sizeContainerBottom = 100.0;
+  static const SIZE_CONTAINER_BOTTOM = 100.0;
 
-  static double spacingHorizontal = 8.0;
-  static double spacingVertical = 6.0;
-  static double spacingVerticalEdge = 8.0;
+  static const SPACING_HORIZONTAL = 8.0;
+  static const SPACING_VERTICAL = 6.0;
+  static const SPACING_VERTICAL_EDGE = 8.0;
 
   IBFirestorePlace placePayload;
   IBFirestorePlace place;
@@ -54,7 +54,6 @@ class IBStateWidgetPlace extends State<IBWidgetPlace> {
   var isDoneLoadingInactive = false;
 
   var isLoading = false;
-  var isTappedAction = false;
 
   var scrollController = ScrollController();
 
@@ -92,8 +91,8 @@ class IBStateWidgetPlace extends State<IBWidgetPlace> {
     var events = List<IBFirestoreEvent>();
 
     if (!isDoneLoadingActive) {
-      events = await IBFirestore.getEventsIndexed(idPlace: place.id, typePlace: place.type, isActive: true, sizeLimit: lengthLoadEvents, countFollowersStartAfter: eventsActive.isNotEmpty ? eventsActive.last.countFollowersDouble : null);
-      if (events.length < lengthLoadEvents) {
+      events = await IBFirestore.getEventsIndexed(idPlace: place.id, typePlace: place.type, isActive: true, sizeLimit: LENGTH_LOAD_EVENTS, countFollowersStartAfter: eventsActive.isNotEmpty ? eventsActive.last.countFollowersDouble : null);
+      if (events.length < LENGTH_LOAD_EVENTS) {
         isDoneLoadingActive = true;
       }
       if (events.isNotEmpty) {
@@ -103,8 +102,8 @@ class IBStateWidgetPlace extends State<IBWidgetPlace> {
       }
     }
     else if (!isDoneLoadingInactive) {
-      events = await IBFirestore.getEventsIndexed(idPlace: place.id, typePlace: place.type, isActive: false, sizeLimit: lengthLoadEvents, countFollowersStartAfter: eventsInactive.isNotEmpty ? eventsInactive.last.countFollowersDouble : null);
-      if (events.length < lengthLoadEvents) {
+      events = await IBFirestore.getEventsIndexed(idPlace: place.id, typePlace: place.type, isActive: false, sizeLimit: LENGTH_LOAD_EVENTS, countFollowersStartAfter: eventsInactive.isNotEmpty ? eventsInactive.last.countFollowersDouble : null);
+      if (events.length < LENGTH_LOAD_EVENTS) {
         setState(() {
           isDoneLoadingInactive = true;
         });
@@ -118,7 +117,7 @@ class IBStateWidgetPlace extends State<IBWidgetPlace> {
 
     isLoading = false;
 
-    if (events.length < lengthLoadEvents && (!isDoneLoadingActive || !isDoneLoadingInactive)) {
+    if (events.length < LENGTH_LOAD_EVENTS && (!isDoneLoadingActive || !isDoneLoadingInactive)) {
       loadEvents();
     }
   }
@@ -138,12 +137,10 @@ class IBStateWidgetPlace extends State<IBWidgetPlace> {
               child: Container(
                 child: Icon(
                   Icons.done,
-                  color: isTappedAction ?
-                  IBColors.tappedDownLight : isUserAppFollowing ?
-                  Colors.white : Colors.white70,
+                  color: isUserAppFollowing ? Colors.white : Colors.white70,
                 ),
                 margin: EdgeInsets.only(
-                    right: spacingHorizontal
+                    right: SPACING_HORIZONTAL
                 ),
               ),
               onSelected: (value) {
@@ -174,7 +171,7 @@ class IBStateWidgetPlace extends State<IBWidgetPlace> {
                             color: isUserAppFollowing ? IBColors.logo : Colors.grey,
                           ),
                           margin: EdgeInsets.only(
-                              left: spacingHorizontal/2
+                              left: SPACING_HORIZONTAL/2
                           ),
                         )
                       ],
@@ -197,7 +194,7 @@ class IBStateWidgetPlace extends State<IBWidgetPlace> {
         body: ListView(
           children: (eventsActive + eventsInactive).map<Widget>((event) => IBWidgetEvent(event)).toList() + <Widget>[
             !isDoneLoading ? Container(
-              height: sizeContainerBottom,
+              height: SIZE_CONTAINER_BOTTOM,
             ) : Container()
           ],
           controller: scrollController,

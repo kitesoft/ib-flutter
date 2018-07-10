@@ -21,6 +21,7 @@ import 'package:ib/IBLocalString.dart';
 import 'package:ib/IBWidgetApp.dart';
 import 'package:ib/IBWidgetEvent.dart';
 import 'package:ib/IBWidgetEventCreate.dart';
+import 'package:ib/IBWidgetMessage.dart';
 import 'package:ib/IBWidgetUser.dart';
 import 'package:ib/IBWidgetUserCreate.dart';
 import 'package:ib/IBWidgetUserIcon.dart';
@@ -38,6 +39,9 @@ class IBWidgetEvents extends StatefulWidget {
 
 
 class IBStateWidgetEvents extends State<IBWidgetEvents> {
+
+  static const IS_TAPPED_ACTION_ADD = "is_tapped_action_add";
+  static const IS_TAPPED_ACTION_USER = "is_tapped_action_user";
 
   static const lengthLoadEvents = 5;
 
@@ -66,14 +70,13 @@ class IBStateWidgetEvents extends State<IBWidgetEvents> {
   var isDoneLoading = false;
   var isLoading = false;
 
-  var isTappedActionAdd = false;
-  var isTappedActionUser = false;
-
   var queries = List<IBFirestoreCacheEvents>();
 
   var scrollController = ScrollController();
 
   var streams = List<StreamSubscription>();
+
+  var taps = Map<String, bool>();
 
   @override
   void initState() {
@@ -86,13 +89,13 @@ class IBStateWidgetEvents extends State<IBWidgetEvents> {
 
     IBMessaging.instance.configure(
         onLaunch: (message) {
-          print(" onLaunch called $message");
+          IBWidgetApp.pushWidget(IBWidgetMessage(message), context);
         },
         onResume: (message) {
-          print(" onResume called $message");
+          IBWidgetApp.pushWidget(IBWidgetMessage(message), context);
         },
         onMessage: (message) {
-          print(" onMessage called $message");
+          IBWidgetApp.pushWidget(IBWidgetMessage(message), context);
         }
     );
 
@@ -200,15 +203,18 @@ class IBStateWidgetEvents extends State<IBWidgetEvents> {
             }
           }
         }
-        
+
         queries.add(IBFirestoreCacheEvents(idPlace: IBLocation.placeCity.id, typePlace: IBLocation.placeCity.type, isActive: true));
         queries.add(IBFirestoreCacheEvents(idPlace: IBLocation.placeCity.id, typePlace: IBLocation.placeCity.type, isActive: true));
       }
     }
 
     if (IBUserApp.current != null) {
-      queries.addAll(IBUserApp.current.placesFollowing.where((placePayload) => placePayload.id != IBLocation.placeCity.id).map((placePayload) => IBFirestoreCacheEvents(idPlace: placePayload.id, typePlace: placePayload.type, isActive: true)));
-      queries.addAll(IBUserApp.current.placesFollowing.where((placePayload) => placePayload.id != IBLocation.placeCity.id).map((placePayload) => IBFirestoreCacheEvents(idPlace: placePayload.id, typePlace: placePayload.type, isActive: true)));
+      var placesFollowing = IBUserApp.current.placesFollowing;
+      if (IBLocation.placeCity != null) {
+        placesFollowing = placesFollowing.where((placePayload) => placePayload.id != IBLocation.placeCity.id).toList();
+      }
+      queries.addAll(placesFollowing.map((placePayload) => IBFirestoreCacheEvents(idPlace: placePayload.id, typePlace: placePayload.type, isActive: true)));
     }
 
     if (location != null) {
@@ -238,11 +244,11 @@ class IBStateWidgetEvents extends State<IBWidgetEvents> {
     if (query.idUserCreator != null) {
       var stream = IBFirestore.listenEvents(idUserCreator: query.idUserCreator, isActive: true).listen((tuple) {
         var isLoadFirst = indexQuery < queries.length && queries[indexQuery].idUserCreator == query.idUserCreator;
-        var eventsAdded = tuple.item1;
+        var eventsAddedActive = tuple.item1.where((event) => event.isActive);
         if (isLoadFirst) {
           indexQuery += 1;
-          eventsPageNew.addAll(eventsAdded);
-          if (eventsAdded.length < lengthLoadEvents && indexQuery != queries.length) {
+          eventsPageNew.addAll(eventsAddedActive);
+          if (eventsAddedActive.length < lengthLoadEvents && indexQuery != queries.length) {
             loadEvents();
           }
           else {
@@ -261,7 +267,7 @@ class IBStateWidgetEvents extends State<IBWidgetEvents> {
         else {
           var eventsModified = tuple.item2;
           setState(() {
-            eventsPageNew.addAll(eventsAdded);
+            eventsPageNew.addAll(eventsAddedActive);
             eventsModified.forEach((eventModified) {
               var indexOfModified = this.events.indexOf(eventModified);
               this.events[indexOfModified] = eventModified;
@@ -274,8 +280,8 @@ class IBStateWidgetEvents extends State<IBWidgetEvents> {
     else if (query.idUserFollower != null) {
       var events = await IBFirestore.getEvents(idUserFollower: query.idUserFollower, isActive: true);
       indexQuery += 1;
-      var eventsOriginal = events.where((event) => !this.events.contains(event)).where((event) => !eventsUserAppCreated.contains(event));
-      eventsPageNew.addAll(eventsOriginal);
+      var eventsOriginalActive = events.where((event) => !this.events.contains(event)).where((event) => !eventsUserAppCreated.contains(event)).where((event) => event.isActive);
+      eventsPageNew.addAll(eventsOriginalActive);
       if (eventsPageNew.length < lengthLoadEvents && indexQuery != queries.length) {
         loadEvents();
       }
@@ -295,11 +301,11 @@ class IBStateWidgetEvents extends State<IBWidgetEvents> {
     else if (query.idGroup != null) {
       var stream = IBFirestore.listenEventsGroup(idGroup: query.idGroup, isActive: true).listen((tuple) {
         var isLoadFirst = indexQuery < queries.length && queries[indexQuery].idGroup == query.idGroup;
-        var eventsAddedOriginal = tuple.item1.where((event) => !this.events.contains(event)).where((event) => !eventsUserAppCreated.contains(event));
+        var eventsAddedOriginalActive = tuple.item1.where((event) => !this.events.contains(event)).where((event) => !eventsUserAppCreated.contains(event)).where((event) => event.isActive);
         if (isLoadFirst) {
           indexQuery += 1;
-          eventsPageNew.addAll(eventsAddedOriginal);
-          if (eventsAddedOriginal.length < lengthLoadEvents && indexQuery != queries.length) {
+          eventsPageNew.addAll(eventsAddedOriginalActive);
+          if (eventsAddedOriginalActive.length < lengthLoadEvents && indexQuery != queries.length) {
             loadEvents();
           }
           else {
@@ -318,7 +324,7 @@ class IBStateWidgetEvents extends State<IBWidgetEvents> {
         else {
           var eventsModified = tuple.item2;
           setState(() {
-            eventsPageNew.addAll(eventsAddedOriginal);
+            eventsPageNew.addAll(eventsAddedOriginalActive);
             eventsModified.forEach((eventModified) {
               var indexOfModified = this.events.indexOf(eventModified);
               this.events[indexOfModified] = eventModified;
@@ -331,12 +337,12 @@ class IBStateWidgetEvents extends State<IBWidgetEvents> {
     else if (query.idPlace != null && (indexQuery == 0 || queries[indexQuery - 1].idPlace != query.idPlace)) {
       var countFollowersStartAfter = query.events != null && query.events.isNotEmpty ? query.events.last.countFollowersDouble : null;
       var events = await IBFirestore.getEventsIndexed(idPlace: query.idPlace, typePlace: query.typePlace, countFollowersStartAfter: countFollowersStartAfter, countFollowersEndAt: 1.0, sizeLimit: lengthLoadEvents, isActive: true);
+      var eventsOriginalActive = events.where((event) => !this.events.contains(event)).where((event) => !eventsUserAppCreated.contains(event)).where((event) => event.isActive);
+      if (IBUserApp.current != null) {
+        eventsOriginalActive = eventsOriginalActive.where((event) => !IBUserApp.current.idsFollowing.contains(event.idCreator));
+      }
       if (events.length < lengthLoadEvents) {
         indexQuery += 1;
-      }
-      var eventsOriginal = events.where((event) => !this.events.contains(event)).where((event) => !eventsUserAppCreated.contains(event));
-      if (IBUserApp.current != null) {
-        eventsOriginal = eventsOriginal.where((event) => !IBUserApp.current.idsFollowing.contains(event.idCreator));
       }
       if (query.events == null) {
         query.events = events;
@@ -344,7 +350,7 @@ class IBStateWidgetEvents extends State<IBWidgetEvents> {
       else {
         query.events.addAll(events);
       }
-      eventsPageNew.addAll(eventsOriginal);
+      eventsPageNew.addAll(eventsOriginalActive);
       if (eventsPageNew.length < lengthLoadEvents && indexQuery != queries.length) {
         loadEvents();
       }
@@ -366,9 +372,9 @@ class IBStateWidgetEvents extends State<IBWidgetEvents> {
       var stream = IBFirestore.listenEventsIndexed(idPlace: query.idPlace, typePlace: query.typePlace, countFollowersStartAfter: countFollowersStartAfter, isActive: true, sizeLimit: lengthLoadEvents).listen((tuple) {
         var isLoadFirst = indexQuery < queries.length && queries[indexQuery].idPlace == query.idPlace;
         var eventsAdded = tuple.item1;
-        var eventsAddedOriginal = eventsAdded.where((event) => !this.events.contains(event)).where((event) => !eventsUserAppCreated.contains(event));
+        var eventsAddedOriginalActive = eventsAdded.where((event) => !this.events.contains(event)).where((event) => !eventsUserAppCreated.contains(event)).where((event) => event.isActive);
         if (IBUserApp.current != null) {
-          eventsAddedOriginal = eventsAddedOriginal.where((event) => !IBUserApp.current.idsFollowing.contains(event.idCreator));
+          eventsAddedOriginalActive = eventsAddedOriginalActive.where((event) => !IBUserApp.current.idsFollowing.contains(event.idCreator));
         }
         if (isLoadFirst) {
           if (eventsAdded.length < lengthLoadEvents) {
@@ -380,7 +386,7 @@ class IBStateWidgetEvents extends State<IBWidgetEvents> {
           else {
             query.events.addAll(eventsAdded);
           }
-          eventsPageNew.addAll(eventsAddedOriginal);
+          eventsPageNew.addAll(eventsAddedOriginalActive);
           if (eventsPageNew.length < lengthLoadEvents && indexQuery != queries.length) {
             loadEvents();
           }
@@ -400,7 +406,7 @@ class IBStateWidgetEvents extends State<IBWidgetEvents> {
         else {
           var eventsModified = tuple.item2;
           setState(() {
-            eventsPageNew.addAll(eventsAddedOriginal);
+            eventsPageNew.addAll(eventsAddedOriginalActive);
             eventsModified.forEach((eventModified) {
               var indexOfModified = this.events.indexOf(eventModified);
               this.events[indexOfModified] = eventModified;
@@ -422,7 +428,7 @@ class IBStateWidgetEvents extends State<IBWidgetEvents> {
             child: Container(
               child: Icon(
                 Icons.library_add,
-                color: isTappedActionAdd ? IBColors.tappedDownLight : Colors.white,
+                color: taps[IS_TAPPED_ACTION_ADD] ?? false ? IBColors.tappedDownLight : Colors.white,
                 size: sizeActionIcon,
               ),
               padding: EdgeInsets.only(
@@ -431,28 +437,29 @@ class IBStateWidgetEvents extends State<IBWidgetEvents> {
             ),
             onTapCancel: () {
               setState(() {
-                isTappedActionAdd = false;
+                taps[IS_TAPPED_ACTION_ADD] = false;
               });
             },
             onTapDown: (_) {
               setState(() {
-                isTappedActionAdd = true;
+                taps[IS_TAPPED_ACTION_ADD] = true;
               });
             },
             onTapUp: (_) {
-              setState(() {
-                isTappedActionAdd = false;
-              });
               if (IBUserApp.current != null) {
                 IBWidgetApp.pushWidget(IBWidgetEventCreate(), context);
               }
               else {
                 IBWidgetApp.pushWidget(IBWidgetUserCreate(onCreate: () {
                   IBWidgetApp.pushWidget(IBWidgetEventCreate(), context);
+                  reloadAll();
                 }, onLogin: () {
-                  login();
+                  reloadAll();
                 }), context);
               }
+              setState(() {
+                taps[IS_TAPPED_ACTION_ADD] = false;
+              });
             },
           ),
           IBUserApp.current != null ? LayoutBuilder(builder: (context, constraints) {
@@ -532,7 +539,7 @@ class IBStateWidgetEvents extends State<IBWidgetEvents> {
               ),
               onTapUp: (_) {
                 IBWidgetApp.pushWidget(IBWidgetUser(user: IBUserApp.current, onLogout: () {
-                  logout();
+                  reloadAll();
                 }), context);
               },
             );
@@ -540,7 +547,7 @@ class IBStateWidgetEvents extends State<IBWidgetEvents> {
               child: Container(
                 child: Icon(
                   Icons.person,
-                  color: isTappedActionUser ? IBColors.tappedDownLight : Colors.white,
+                  color: taps[IS_TAPPED_ACTION_USER] ?? false ? IBColors.tappedDownLight : Colors.white,
                   size: sizeActionIcon,
                 ),
                 margin: EdgeInsets.only(
@@ -549,21 +556,23 @@ class IBStateWidgetEvents extends State<IBWidgetEvents> {
               ),
               onTapCancel: () {
                 setState(() {
-                  isTappedActionUser = false;
+                  taps[IS_TAPPED_ACTION_USER] = false;
                 });
               },
               onTapDown: (_) {
                 setState(() {
-                  isTappedActionUser = true;
+                  taps[IS_TAPPED_ACTION_USER] = true;
                 });
               },
               onTapUp: (_) {
-                setState(() {
-                  isTappedActionUser = false;
-                });
-                IBWidgetApp.pushWidget(IBWidgetUserCreate(onLogin: () {
-                  login();
+                IBWidgetApp.pushWidget(IBWidgetUserCreate(onCreate: () {
+                  reloadAll();
+                }, onLogin: () {
+                  reloadAll();
                 }), context);
+                setState(() {
+                  taps[IS_TAPPED_ACTION_USER] = false;
+                });
               }
           ),
         ],
@@ -655,7 +664,7 @@ class IBStateWidgetEvents extends State<IBWidgetEvents> {
     );
   }
 
-  login() {
+  reloadAll() {
 
     isDoneLoading = false;
     isLoading = false;
@@ -671,11 +680,5 @@ class IBStateWidgetEvents extends State<IBWidgetEvents> {
     });
 
     setupAsync();
-  }
-
-  logout() {
-    streams.forEach((stream) {
-      stream.cancel();
-    });
   }
 }

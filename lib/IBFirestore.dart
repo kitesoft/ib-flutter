@@ -30,7 +30,6 @@ class IBFirestore {
   static const ID = "id";
   static const ID_CITY = "id_city";
   static const ID_CREATOR = "id_creator";
-  static const ID_EVENT = "id_event";
   static const ID_GROUP = "id_group";
   static const IDS_FOLLOWERS = "ids_followers";
   static const IDS_FOLLOWING = "ids_following";
@@ -38,11 +37,12 @@ class IBFirestore {
   static const IDS_MEMBERS = "ids_members";
   static const IDS_PLACES = "ids_places";
   static const IS_ACTIVE = "is_active";
-  static const MOCK = "mock_";
+  static const MOCK = "_mock";
   static const NAME = "name";
   static const NAMES = "names";
   static const PASSWORD = "pass";
   static const PLACES = "places";
+  static const PLACES_DISTANCES = "places_distances";
   static const PLACES_FOLLOWING = "places_following";
   static const TIMESTAMP = "timestamp";
   static const TIMESTAMP_END = "timestamp_end";
@@ -52,24 +52,29 @@ class IBFirestore {
   static const TYPE = "type";
 
   // COLLECTIONS
-  static CollectionReference collectionEvents = Firestore.instance.collection("${debugPrefix}events");
-  static CollectionReference collectionEventsGroup = Firestore.instance.collection("${debugPrefix}group_events");
+  static CollectionReference collectionEvents = Firestore.instance.collection("events$suffixDebug");
+  static CollectionReference collectionEventsGroup = Firestore.instance.collection("group_events$suffixDebug");
   static CollectionReference collectionGroups = Firestore.instance.collection("groups");
-  static CollectionReference collectionPayloads = Firestore.instance.collection("payloads");
+  static CollectionReference collectionPayloads = Firestore.instance.collection("payloads$suffixDebug");
   static CollectionReference collectionPlaces = Firestore.instance.collection("places");
   static CollectionReference collectionUsers = Firestore.instance.collection("users");
 
   // DOCUMENTS
-  static DocumentReference documentPayloadsGroups = collectionPayloads.document("${debugPrefix}groups");
-  static DocumentReference documentPayloadsUsers = collectionPayloads.document("${debugPrefix}users");
+  static DocumentReference documentPayloadsGroups = collectionPayloads.document("groups");
+  static DocumentReference documentPayloadsUsers = collectionPayloads.document("users");
 
   // UTIL
-  static const debugPrefix = bool.fromEnvironment("dart.vm.product") ? "" : MOCK;
+  static String get suffixDebug {
+    bool isDebugMode = false;
+    assert(isDebugMode = true);
+    return isDebugMode ? "" : "";
+  }
 
   // VARS
   static IBFirestorePlace city;
 
   static var cachedEvents = List<IBFirestoreCacheEvents>();
+  static var cachedEventsGroups = List<IBFirestoreCacheEvents>();
   static var cachedGroups = List<IBFirestoreGroup>();
   static var cachedPlaces = List<IBFirestorePlace>();
   static var cachedUsers = List<IBFirestoreUser>();
@@ -203,7 +208,7 @@ class IBFirestore {
 
       collectionPlaces.document(locality.id).setData({
         PLACES : {
-          place.id : place.mapPayloadPlace
+          place.id : place.mapPayloadDistance
         }
       }, merge: true);
 
@@ -272,7 +277,7 @@ class IBFirestore {
         IDS_FOLLOWERS : {
           IBUserApp.current.id : follow
         },
-        COUNT_FOLLOWERS : event.countFollowersDoubleFresh
+        COUNT_FOLLOWERS : event.countFollowersDouble + 1.0
       }, merge: true);
     }
     else {
@@ -301,7 +306,7 @@ class IBFirestore {
 
     await collectionUsers.document(IBUserApp.current.id).setData({
       PLACES_FOLLOWING : {
-        place.id : place.mapPayloadUser
+        place.id : place.mapPayloadFollowing
       },
     }, merge: true);
 
@@ -338,11 +343,28 @@ class IBFirestore {
   // ...
   // ...
   // ...
+  static Future<IBFirestoreEvent> getEvent(String id) async {
+
+    var completer = Completer<IBFirestoreEvent>();
+
+    var snapshot = await collectionEvents.document(id).get();
+    if (snapshot != null) {
+      var event = IBFirestoreEvent.firestore(snapshot.documentID, snapshot.data);
+      completer.complete(event);
+    }
+    else {
+      completer.complete(null);
+    }
+
+    return completer.future;
+  }
+
+
   static Future<List<IBFirestoreEvent>> getEvents({String idPlace, String idUserCreator, String idUserFollower, bool isActive, String typePlace}) async {
 
     var completer = Completer<List<IBFirestoreEvent>>();
 
-    var cached = cachedEvents.where((q) => q.idPlace == idPlace && q.idUserCreator == idUserCreator && q.idUserFollower == idUserFollower && (q.isActive == isActive || q.isActive == null || isActive == null) && q.isCollectionGroups == false).toList();
+    var cached = cachedEvents.where((q) => q.idPlace == idPlace && q.idUserCreator == idUserCreator && q.idUserFollower == idUserFollower && (q.isActive == isActive || q.isActive == null || isActive == null)).toList();
 
     if (cached.isNotEmpty) {
       var events = List<IBFirestoreEvent>();
@@ -392,7 +414,7 @@ class IBFirestore {
         events.add(event);
       });
 
-      cachedEvents.add(IBFirestoreCacheEvents(events: events, idPlace: idPlace, idUserCreator: idUserCreator, idUserFollower: idUserFollower, isActive: isActive, isCollectionGroups: false,  typePlace: typePlace));
+      cachedEvents.add(IBFirestoreCacheEvents(events: events, idPlace: idPlace, idUserCreator: idUserCreator, idUserFollower: idUserFollower, isActive: isActive, typePlace: typePlace));
 
       completer.complete(events);
     }
@@ -405,7 +427,7 @@ class IBFirestore {
 
     var completer = Completer<List<IBFirestoreEvent>>();
 
-    var cached = cachedEvents.where((q) => q.idGroup == idGroup && q.idUserCreator == idUserCreator && q.idUserFollower == idUserFollower && (q.isActive == isActive || q.isActive == null || isActive == null) && q.isCollectionGroups == true).toList();
+    var cached = cachedEventsGroups.where((q) => q.idGroup == idGroup && q.idUserCreator == idUserCreator && q.idUserFollower == idUserFollower && (q.isActive == isActive || q.isActive == null || isActive == null)).toList();
 
     if (cached.isNotEmpty) {
       var events = cached.first.events;
@@ -455,7 +477,7 @@ class IBFirestore {
         events.add(event);
       });
 
-      cachedEvents.add(IBFirestoreCacheEvents(events: events, idGroup: idGroup, idUserCreator: idUserCreator, idUserFollower: idUserFollower, isCollectionGroups: true, isActive: isActive));
+      cachedEventsGroups.add(IBFirestoreCacheEvents(events: events, idGroup: idGroup, idUserCreator: idUserCreator, idUserFollower: idUserFollower, isActive: isActive));
 
       completer.complete(events);
     }
@@ -467,7 +489,7 @@ class IBFirestore {
 
     var completer = Completer<List<IBFirestoreEvent>>();
 
-    var cached = cachedEvents.where((q) => q.idPlace == idPlace && q.idUserCreator == idUserCreator && q.idUserFollower == idUserFollower && (q.isActive == isActive || q.isActive == null || isActive == null) && q.isCollectionGroups == false).toList();
+    var cached = cachedEvents.where((q) => q.idPlace == idPlace && q.idUserCreator == idUserCreator && q.idUserFollower == idUserFollower && (q.isActive == isActive || q.isActive == null || isActive == null)).toList();
 
     if (cached.isNotEmpty && (countFollowersStartAfter == null || countFollowersStartAfter != cached.first.events.last.countFollowersDouble)) {
       var events = List<IBFirestoreEvent>();
@@ -529,7 +551,7 @@ class IBFirestore {
         cached.first.didLoadIndexed = events.length < sizeLimit;
       }
       else {
-        cachedEvents.add(IBFirestoreCacheEvents(didLoadIndexed: events.length < sizeLimit, events: events, idPlace: idPlace, idUserCreator: idUserCreator, idUserFollower: idUserFollower, isActive: isActive, isCollectionGroups: false, typePlace: typePlace));
+        cachedEvents.add(IBFirestoreCacheEvents(didLoadIndexed: events.length < sizeLimit, events: events, idPlace: idPlace, idUserCreator: idUserCreator, idUserFollower: idUserFollower, isActive: isActive, typePlace: typePlace));
       }
 
       completer.complete(events);
@@ -746,7 +768,7 @@ class IBFirestore {
       var eventsAdded = snapshot.documentChanges.where((documentChange) => documentChange.type == DocumentChangeType.added).map<IBFirestoreEvent>((documentChange) => IBFirestoreEvent.firestore(documentChange.document.documentID, documentChange.document.data)).toList();
       var eventsModified = snapshot.documentChanges.where((documentChange) => documentChange.type == DocumentChangeType.modified).map<IBFirestoreEvent>((documentChange) => IBFirestoreEvent.firestore(documentChange.document.documentID, documentChange.document.data)).toList();
 
-      var cached = cachedEvents.where((q) => q.idGroup == idGroup && q.idUserCreator == idUserCreator && q.idUserFollower == idUserFollower && q.isActive == isActive).toList();
+      var cached = cachedEventsGroups.where((q) => q.idGroup == idGroup && q.idUserCreator == idUserCreator && q.idUserFollower == idUserFollower && q.isActive == isActive).toList();
 
       if (cached.isNotEmpty) {
         cached.first.events.addAll(eventsAdded);
@@ -756,7 +778,7 @@ class IBFirestore {
         });
       }
       else {
-        cachedEvents.add(IBFirestoreCacheEvents(events: eventsAdded + eventsModified, idGroup: idGroup, idUserCreator: idUserCreator, idUserFollower: idUserFollower, isActive: true));
+        cachedEventsGroups.add(IBFirestoreCacheEvents(events: eventsAdded + eventsModified, idGroup: idGroup, idUserCreator: idUserCreator, idUserFollower: idUserFollower, isActive: true));
       }
 
       streamController.add(Tuple2(eventsAdded, eventsModified));
@@ -774,7 +796,7 @@ class IBFirestore {
 
     Query query = collectionEvents;
     query = query.where("$PLACES.$typePlace.$ID", isEqualTo: idPlace);
-    query = query.where(IS_ACTIVE, isEqualTo: true);
+    query = query.where(IS_ACTIVE, isEqualTo: isActive);
     query = query.limit(sizeLimit);
 
     if (countFollowersStartAfter != null || countFollowersEndAt != null) {

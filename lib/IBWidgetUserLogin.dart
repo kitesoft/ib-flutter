@@ -10,47 +10,47 @@ import 'package:ib/IBMessaging.dart';
 import 'package:ib/IBLocalString.dart';
 
 
-typedef void IBWidgetUserCallback();
+typedef void IBCallbackWidgetUserLogin();
 
 class IBWidgetUserLogin extends StatefulWidget {
 
-  final IBWidgetUserCallback onComplete;
+  final IBCallbackWidgetUserLogin onLogin;
 
-  IBWidgetUserLogin({this.onComplete, Key key}) : super(key: key);
+  IBWidgetUserLogin({this.onLogin, Key key}) : super(key: key);
 
   @override
   IBStateWidgetUserLogin createState() {
-    return IBStateWidgetUserLogin(onComplete: onComplete);
+    return IBStateWidgetUserLogin(onComplete: onLogin);
   }
 }
 
 
 class IBStateWidgetUserLogin extends State<IBWidgetUserLogin> {
 
-  static int lengthMaxName = 35;
-  static int lengthMaxPassword;
+  static const LENGTH_MAX_NAME = 35;
+  static const LENGTH_MAX_PASSWORD = 8;
 
-  static int lengthMinName = 6;
-  static int lengthMinPassword = 8;
+  static const LENGTH_MIN_NAME = 6;
+  static const LENGTH_MIN_PASSWORD = 8;
 
-  static int linesMaxName = 1;
-  static int linesMaxPassword = 1;
+  static const LINES_MAX_NAME = 1;
+  static const LINES_MAX_PASSWORD = 1;
 
-  static double sizeIcon = 25.0;
-  static double sizeUserIcon = 65.0;
+  static const SIZE_ICON = 25.0;
+  static const SIZE_USER_ICON = 65.0;
 
-  static double spacingHorizontal = 8.0;
-  static double spacingVertical = 6.0;
-  static double spacingVerticalEdge = 8.0;
+  static const SPACING_HORIZONTAL = 8.0;
+  static const SPACING_VERTICAL = 6.0;
+  static const SPACING_VERTICAL_EDGE = 8.0;
 
-  IBWidgetUserCallback onComplete;
+  IBCallbackWidgetUserLogin onComplete;
 
   IBStateWidgetUserLogin({this.onComplete});
 
   var fileImage;
 
   bool get isLoginEnabled {
-    return textControllerName.text.length >= lengthMinName && textControllerPassword.text.length >= lengthMinPassword && (inputName != textControllerName.text || inputPassword != textControllerPassword.text);
+    return textControllerName.text.length >= LENGTH_MIN_NAME && textControllerPassword.text.length >= LENGTH_MIN_PASSWORD && (inputName != textControllerName.text || inputPassword != textControllerPassword.text);
   }
 
   String inputName;
@@ -98,7 +98,7 @@ class IBStateWidgetUserLogin extends State<IBWidgetUserLogin> {
                         ),
                       ),
                       margin: EdgeInsets.only(
-                          right: spacingHorizontal
+                          right: SPACING_HORIZONTAL
                       ),
                     )
                 ),
@@ -180,17 +180,17 @@ class IBStateWidgetUserLogin extends State<IBWidgetUserLogin> {
                       ),
                     ),
                     margin: EdgeInsets.only(
-                      left: spacingHorizontal/2,
+                      left: SPACING_HORIZONTAL/2,
                     ),
                   )
                 ],
                 mainAxisAlignment: MainAxisAlignment.center,
               ),
               margin: EdgeInsets.only(
-                top: spacingVertical,
-                left: spacingHorizontal,
-                right: spacingHorizontal,
-                bottom: spacingVertical,
+                top: SPACING_VERTICAL,
+                left: SPACING_HORIZONTAL,
+                right: SPACING_HORIZONTAL,
+                bottom: SPACING_VERTICAL,
               ),
             ) : Container(),
             Container(
@@ -201,14 +201,14 @@ class IBStateWidgetUserLogin extends State<IBWidgetUserLogin> {
                     decoration: InputDecoration(
                         border: InputBorder.none,
                         contentPadding: EdgeInsets.only(
-                          top: spacingVertical,
+                          top: SPACING_VERTICAL,
 //                                  right: iconSize/2
                         ),
                         hintText: IBLocalString.userLoginHintName
                     ),
                     keyboardType: TextInputType.multiline,
-                    maxLines: linesMaxName,
-                    maxLength: lengthMaxName,
+                    maxLines: LINES_MAX_NAME,
+                    maxLength: LENGTH_MAX_NAME,
                     onChanged: (_) {
                       setState(() { });
                     },
@@ -218,20 +218,20 @@ class IBStateWidgetUserLogin extends State<IBWidgetUserLogin> {
                     child: Container(
                       child: Icon(
                         Icons.done,
-                        color: textControllerName.text.length >= lengthMinName ? IBColors.logo : Colors.grey,
-                        size: sizeIcon,
+                        color: textControllerName.text.length >= LENGTH_MIN_NAME ? IBColors.logo : Colors.grey,
+                        size: SIZE_ICON,
                       ),
                       margin: EdgeInsets.only(
-                          top: spacingVertical/2
+                          top: SPACING_VERTICAL/2
                       ),
                     ),
                   )
                 ],
               ),
               margin: EdgeInsets.only(
-                top: spacingVerticalEdge,
-                left: spacingHorizontal,
-                right: spacingHorizontal,
+                top: SPACING_VERTICAL_EDGE,
+                left: SPACING_HORIZONTAL,
+                right: SPACING_HORIZONTAL,
               ),
             ),
             Container(
@@ -242,14 +242,13 @@ class IBStateWidgetUserLogin extends State<IBWidgetUserLogin> {
                     decoration: InputDecoration(
                         border: InputBorder.none,
                         contentPadding: EdgeInsets.only(
-                          top: spacingVertical,
+                          top: SPACING_VERTICAL,
 //                                  right: iconSize/2
                         ),
                         hintText: IBLocalString.userLoginHintPassword
                     ),
                     keyboardType: TextInputType.multiline,
-                    maxLines: linesMaxPassword,
-                    maxLength: lengthMaxPassword,
+                    maxLines: LINES_MAX_PASSWORD,
                     obscureText: true,
                     onChanged: (_) {
                       setState(() {  });
@@ -260,21 +259,21 @@ class IBStateWidgetUserLogin extends State<IBWidgetUserLogin> {
                     child: Container(
                       child: Icon(
                         Icons.done,
-                        color: textControllerPassword.text.length >= lengthMinPassword ? IBColors.logo : Colors.grey,
-                        size: sizeIcon,
+                        color: textControllerPassword.text.length >= LENGTH_MIN_PASSWORD ? IBColors.logo : Colors.grey,
+                        size: SIZE_ICON,
                       ),
                       margin: EdgeInsets.only(
-                          top: spacingVertical/2
+                          top: SPACING_VERTICAL/2
                       ),
                     ),
                   )
                 ],
               ),
               margin: EdgeInsets.only(
-                top: spacingVertical,
-                left: spacingHorizontal,
-                right: spacingHorizontal,
-                bottom: spacingVerticalEdge,
+                top: SPACING_VERTICAL,
+                left: SPACING_HORIZONTAL,
+                right: SPACING_HORIZONTAL,
+                bottom: SPACING_VERTICAL_EDGE,
               ),
             ),
           ],

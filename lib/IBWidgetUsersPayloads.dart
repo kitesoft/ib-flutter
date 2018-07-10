@@ -27,19 +27,17 @@ class IBWidgetUsersPayloads extends StatefulWidget {
 
 class IBStateWidgetUsersPayloads extends State<IBWidgetUsersPayloads> {
 
-  static double sizeHeightContainerPayloadUser = 45.0;
+  static const SIZE_HEIGHT_CONTAINER_PAYLOAD_USER = 45.0;
 
-  static double spacingHorizontal = 8.0;
-  static double spacingVertical = 6.0;
-  static double spacingVerticalEdge = 8.0;
+  static const SPACING_HORIZONTAL = 8.0;
+  static const SPACING_VERTICAL = 6.0;
+  static const SPACING_VERTICAL_EDGE = 8.0;
 
   bool areFollowers;
   String name;
   List<String> idsUsers;
 
   IBStateWidgetUsersPayloads(this.areFollowers, this.idsUsers, this.name);
-
-  var isTappedAction = false;
 
   var textControllerPlace = TextEditingController();
 
@@ -78,7 +76,6 @@ class IBStateWidgetUsersPayloads extends State<IBWidgetUsersPayloads> {
                     color: Colors.white
                 ),
               ),
-              onTapDown: (_) {}
           ),
         ),
         body: ListView(
@@ -96,9 +93,9 @@ class IBStateWidgetUsersPayloads extends State<IBWidgetUsersPayloads> {
                               userPayload.id,
                             ),
                             margin: EdgeInsets.only(
-                              top: spacingVertical,
-                              left: spacingHorizontal,
-                              bottom: spacingVertical,
+                              top: SPACING_VERTICAL,
+                              left: SPACING_HORIZONTAL,
+                              bottom: SPACING_VERTICAL,
                             ),
                           ),
                           Container(
@@ -111,7 +108,7 @@ class IBStateWidgetUsersPayloads extends State<IBWidgetUsersPayloads> {
                               ),
                             ),
                             margin: EdgeInsets.only(
-                                left: spacingHorizontal/2
+                                left: SPACING_HORIZONTAL/2
                             ),
                           )
                         ],
@@ -123,7 +120,7 @@ class IBStateWidgetUsersPayloads extends State<IBWidgetUsersPayloads> {
                         color: Colors.black26,
                         height: 0.5,
                         margin: EdgeInsets.only(
-                            left: spacingHorizontal
+                            left: SPACING_HORIZONTAL
                         ),
                       ),
                     ),
@@ -134,7 +131,7 @@ class IBStateWidgetUsersPayloads extends State<IBWidgetUsersPayloads> {
                     )
                   ],
                 ),
-                height: sizeHeightContainerPayloadUser,
+                height: SIZE_HEIGHT_CONTAINER_PAYLOAD_USER,
                 padding: EdgeInsets.only(),
               ),
               onTapUp: (_) {

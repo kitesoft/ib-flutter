@@ -19,11 +19,11 @@ import 'package:ib/IBWidgetUserIcon.dart';
 import 'package:ib/IBWidgetUsersPayloads.dart';
 
 
-typedef void IBWidgetUserLogout();
+typedef void IBCallbackWidgetUserLogout();
 
 class IBWidgetUser extends StatefulWidget {
 
-  final IBWidgetUserLogout onLogout;
+  final IBCallbackWidgetUserLogout onLogout;
   final IBFirestoreUser userPayload;
   final IBFirestoreUser user;
 
@@ -31,20 +31,25 @@ class IBWidgetUser extends StatefulWidget {
 
   @override
   IBStateWidgetUser createState() {
-    return IBStateWidgetUser(user: user, userPayload: userPayload);
+    return IBStateWidgetUser(onLogout: onLogout, user: user, userPayload: userPayload);
   }
 }
 
 
 class IBStateWidgetUser extends State<IBWidgetUser> {
 
-  static double sizeUserIcon = 65.0;
+  static const IS_FOLLOWING = "is_following";
+  static const IS_FOLLOWER = "is_follower";
+  static const IS_TAPPED_FOLLOWERS_COUNT = "is_tapped_more_followers";
+  static const IS_TAPPED_FOLLOWING_COUNT = "is_tapped_more_following";
 
-  static double spacingHorizontal = 8.0;
-  static double spacingVertical = 6.0;
-  static double spacingVerticalEdge = 8.0;
+  static const SIZE_USER_ICON = 65.0;
 
-  IBWidgetUserLogout onLogout;
+  static const SPACING_HORIZONTAL = 8.0;
+  static const SPACING_VERTICAL = 6.0;
+  static const SPACING_VERTICAL_EDGE = 8.0;
+
+  IBCallbackWidgetUserLogout onLogout;
   IBFirestoreUser user;
   IBFirestoreUser userPayload;
 
@@ -82,8 +87,7 @@ class IBStateWidgetUser extends State<IBWidgetUser> {
 
   bool get isSelf => idUserNonNull == IBUserApp.currentId;
 
-  var isAppUserFollowing = false;
-  var isTappedAction = false;
+  var isUserAppFollowing = false;
 
   List<String> get idsFollowersShown {
     if (IBUserApp.current == null) {
@@ -99,6 +103,8 @@ class IBStateWidgetUser extends State<IBWidgetUser> {
     return user.idsFollowing.toSet().intersection(IBUserApp.current.idsFollowing.toSet()).toList();
   }
 
+  var taps = Map<String, bool>();
+
   var usersPayloadsFollowersShown = List<IBFirestoreUser>();
   var usersPayloadsFollowingShown =  List<IBFirestoreUser>();
 
@@ -111,7 +117,7 @@ class IBStateWidgetUser extends State<IBWidgetUser> {
     IBLocalString.context = context;
 
     if (IBUserApp.current != null) {
-      isAppUserFollowing = IBUserApp.current.idsFollowing.contains(idUserNonNull);
+      isUserAppFollowing = IBUserApp.current.idsFollowing.contains(idUserNonNull);
     }
 
     setupAsync();
@@ -181,13 +187,10 @@ class IBStateWidgetUser extends State<IBWidgetUser> {
               child: Container(
                 child: Icon(
                   user.id == IBUserApp.currentId ? Icons.more_vert : Icons.done,
-                  color: isTappedAction ?
-                  IBColors.tappedDownLight : user.id != IBUserApp.currentId ?
-                  isAppUserFollowing ?
-                  Colors.white : Colors.white70 : Colors.white,
+                  color: user.id == IBUserApp.currentId || isUserAppFollowing ? Colors.white : Colors.white70,
                 ),
                 margin: EdgeInsets.only(
-                    right: spacingHorizontal
+                    right: SPACING_HORIZONTAL
                 ),
               ),
               onSelected: (value) async {
@@ -208,7 +211,9 @@ class IBStateWidgetUser extends State<IBWidgetUser> {
                   IBUserApp.current = null;
                   IBDefaults.setIdUser(null);
                   Navigator.pop(context);
-                  onLogout();
+                  if (onLogout != null) {
+                    onLogout();
+                  }
                 }
               },
               itemBuilder: (BuildContext context) {
@@ -251,10 +256,10 @@ class IBStateWidgetUser extends State<IBWidgetUser> {
                           Container(
                             child: Icon(
                               Icons.done,
-                              color: isAppUserFollowing ? IBColors.logo : Colors.grey,
+                              color: isUserAppFollowing ? IBColors.logo : Colors.grey,
                             ),
                             margin: EdgeInsets.only(
-                                left: spacingHorizontal/2
+                                left: SPACING_HORIZONTAL/2
                             ),
                           )
                         ],
@@ -282,11 +287,11 @@ class IBStateWidgetUser extends State<IBWidgetUser> {
                 child: IBWidgetUserIcon(
                   user.id,
                 ),
-                height: sizeUserIcon,
+                height: SIZE_USER_ICON,
                 margin: EdgeInsets.only(
-                    top: spacingVertical
+                    top: SPACING_VERTICAL
                 ),
-                width: sizeUserIcon,
+                width: SIZE_USER_ICON,
               ),
             ),
             Center(
@@ -296,9 +301,9 @@ class IBStateWidgetUser extends State<IBWidgetUser> {
                   textAlign: TextAlign.center,
                 ),
                 margin: EdgeInsets.only(
-                    top: spacingVertical,
-                    right: spacingHorizontal,
-                    left: spacingHorizontal
+                    top: SPACING_VERTICAL,
+                    right: SPACING_HORIZONTAL,
+                    left: SPACING_HORIZONTAL
                 ),
               ),
             ),
@@ -308,9 +313,9 @@ class IBStateWidgetUser extends State<IBWidgetUser> {
                   color: IBColors.divider,
                   height: 0.5,
                   margin: EdgeInsets.only(
-                      top: spacingVertical
+                      top: SPACING_VERTICAL
                   ),
-                  width: min(constraints.maxWidth - spacingHorizontal*2, user.description.length * 14.0/2.3),
+                  width: min(constraints.maxWidth - SPACING_HORIZONTAL*2, user.description.length * 14.0/2.3),
                 );
               }),
             ),
@@ -326,45 +331,74 @@ class IBStateWidgetUser extends State<IBWidgetUser> {
                       ),
                       textAlign: TextAlign.left,
                     )
-                  ] + usersPayloadsFollowersShown.map((userPayload) => [
-                    Container(
-                      child: IBWidgetUserIcon(
-                        user.id,
-                      ),
-                      height: 18.0,
-                      margin: EdgeInsets.only(
-                      ),
-                      width: 18.0,
-                    ),
-                    GestureDetector(
-                        child: Text(
-                          user.name,
-                          style: TextStyle(
-                            fontSize: 14.0,
-                            fontWeight: FontWeight.w400,
+                  ]
+                      + usersPayloadsFollowersShown.map((userPayload) => [
+                        Container(
+                          child: IBWidgetUserIcon(
+                            userPayload.id,
                           ),
+                          height: 18.0,
+                          margin: EdgeInsets.only(
+                          ),
+                          width: 18.0,
                         ),
-                        onTapUp: (_) {
-                          IBWidgetApp.pushWidget(IBWidgetUser(userPayload: userPayload), context);
-                        }
-                    ),
-                  ]).expand((list) => list).toList() + (user.idsFollowers.length > idsFollowersShown.length ? [
-                    GestureDetector(
-                      child: Text(
-                        IBLocalString.eventMoreFollowersCount(user.idsFollowers.length - idsFollowersShown.length),
-                      ),
-                      onTapUp: (_) {
-                        IBWidgetApp.pushWidget(IBWidgetUsersPayloads(true, user.idsFollowers, user.name), context);
-                      },
-                    ),
-                  ] : []),
-                  runSpacing: spacingVertical/2,
-                  spacing: spacingHorizontal/2,
+                        GestureDetector(
+                            child: Text(
+                              userPayload.name,
+                              style: TextStyle(
+                                color: taps["$IS_FOLLOWER${userPayload.id}"] ?? false ? IBColors.tappedDown : Colors.grey,
+                                fontSize: 14.0,
+                                fontWeight: FontWeight.w400,
+                              ),
+                            ),
+                            onTapCancel: () {
+                              setState(() {
+                                taps["$IS_FOLLOWER${userPayload.id}"] = false;
+                              });
+                            },
+                            onTapDown: (_) {
+                              setState(() {
+                                taps["$IS_FOLLOWER${userPayload.id}"] = true;
+                              });
+                            },
+                            onTapUp: (_) {
+                              IBWidgetApp.pushWidget(IBWidgetUser(userPayload: userPayload), context);
+                              setState(() {
+                                taps["$IS_FOLLOWER${userPayload.id}"] = false;
+                              });
+                            }
+                        ),
+                      ]).expand((list) => list).toList()
+                      + (user.idsFollowers.length > idsFollowersShown.length ? [
+                        GestureDetector(
+                          child: Text(
+                            IBLocalString.eventMoreFollowersCount(user.idsFollowers.length - idsFollowersShown.length),
+                          ),
+                          onTapCancel: () {
+                            setState(() {
+                              taps[IS_TAPPED_FOLLOWERS_COUNT] = false;
+                            });
+                          },
+                          onTapDown: (_) {
+                            setState(() {
+                              taps[IS_TAPPED_FOLLOWERS_COUNT] = true;
+                            });
+                          },
+                          onTapUp: (_) {
+                            IBWidgetApp.pushWidget(IBWidgetUsersPayloads(true, user.idsFollowers, user.name), context);
+                            setState(() {
+                              taps[IS_TAPPED_FOLLOWERS_COUNT] = false;
+                            });
+                          },
+                        ),
+                      ] : []),
+                  runSpacing: SPACING_VERTICAL/2,
+                  spacing: SPACING_HORIZONTAL/2,
                 ),
                 margin: EdgeInsets.only(
-                    top: spacingVertical,
-                    left: spacingHorizontal,
-                    right: spacingHorizontal
+                    top: SPACING_VERTICAL,
+                    left: SPACING_HORIZONTAL,
+                    right: SPACING_HORIZONTAL
                 ),
               ),
             ) : Center(
@@ -373,19 +407,35 @@ class IBStateWidgetUser extends State<IBWidgetUser> {
                   child: Text(
                     user.idsFollowers.isEmpty ? IBLocalString.userNoFollowers : IBLocalString.eventFollowersCount(user.idsFollowers.length),
                     style: TextStyle(
+                        color: taps[IS_TAPPED_FOLLOWERS_COUNT] ?? false ? IBColors.tappedDown : Colors.black,
                         fontStyle: user.idsFollowers.isEmpty ? FontStyle.italic : FontStyle.normal
                     ),
                   ),
                   margin: EdgeInsets.only(
-                      top: spacingVertical,
-                      left: spacingHorizontal,
-                      right: spacingHorizontal
+                      top: SPACING_VERTICAL,
+                      left: SPACING_HORIZONTAL,
+                      right: SPACING_HORIZONTAL
                   ),
                 ),
+                onTapCancel: () {
+                  setState(() {
+                    taps[IS_TAPPED_FOLLOWERS_COUNT] = false;
+                  });
+                },
+                onTapDown: (_) {
+                  if (user.idsFollowers.isNotEmpty) {
+                    setState(() {
+                      taps[IS_TAPPED_FOLLOWERS_COUNT] = true;
+                    });
+                  }
+                },
                 onTapUp: (_) {
                   if (user.idsFollowers.isNotEmpty) {
                     IBWidgetApp.pushWidget(IBWidgetUsersPayloads(true, user.idsFollowers, user.name), context);
                   }
+                  setState(() {
+                    taps[IS_TAPPED_FOLLOWERS_COUNT] = false;
+                  });
                 },
               ),
             ),
@@ -401,45 +451,76 @@ class IBStateWidgetUser extends State<IBWidgetUser> {
                       ),
                       textAlign: TextAlign.left,
                     )
-                  ] + usersPayloadsFollowingShown.map((userPayload) => [
-                    Container(
-                      child: IBWidgetUserIcon(
-                        user.id,
-                      ),
-                      height: 18.0,
-                      margin: EdgeInsets.only(
-                      ),
-                      width: 18.0,
-                    ),
-                    GestureDetector(
-                      child: Text(
-                        user.name,
-                        style: TextStyle(
-                          fontSize: 14.0,
-                          fontWeight: FontWeight.w400,
+                  ]
+                      + usersPayloadsFollowingShown.map((userPayload) => [
+                        Container(
+                          child: IBWidgetUserIcon(
+                            userPayload.id,
+                          ),
+                          height: 18.0,
+                          margin: EdgeInsets.only(),
+                          width: 18.0,
                         ),
-                      ),
-                      onTapUp: (_) {
-                        IBWidgetApp.pushWidget(IBWidgetUser(userPayload: userPayload), context);
-                      },
-                    ),
-                  ]).expand((list) => list).toList() + (user.idsFollowing.length > idsFollowingShown.length ? [
-                    GestureDetector(
-                      child: Text(
-                        IBLocalString.eventMoreFollowersCount(user.idsFollowing.length - idsFollowingShown.length),
-                      ),
-                      onTapUp: (_) {
-                        IBWidgetApp.pushWidget(IBWidgetUsersPayloads(false, user.idsFollowing, user.name), context);
-                      },
-                    ),
-                  ] : []),
-                  runSpacing: spacingVertical/2,
-                  spacing: spacingHorizontal/2,
+                        GestureDetector(
+                          child: Text(
+                            userPayload.name,
+                            style: TextStyle(
+                              color: taps["$IS_FOLLOWING${userPayload.id}"] ?? false ? IBColors.tappedDown : Colors.black,
+                              fontSize: 14.0,
+                              fontWeight: FontWeight.w400,
+                            ),
+                          ),
+                          onTapCancel: () {
+                            setState(() {
+                              taps["$IS_FOLLOWING${userPayload.id}"] = false;
+                            });
+                          },
+                          onTapDown: (_) {
+                            setState(() {
+                              taps["$IS_FOLLOWING${userPayload.id}"] = true;
+                            });
+                          },
+                          onTapUp: (_) {
+                            IBWidgetApp.pushWidget(IBWidgetUser(userPayload: userPayload), context);
+                            setState(() {
+                              taps["$IS_FOLLOWING${userPayload.id}"] = false;
+                            });
+                          },
+                        ),
+                      ]).expand((list) => list).toList()
+                      + (user.idsFollowing.length > idsFollowingShown.length ? [
+                        GestureDetector(
+                          child: Text(
+                            IBLocalString.eventMoreFollowersCount(user.idsFollowing.length - idsFollowingShown.length),
+                            style: TextStyle(
+                              color: taps[IS_TAPPED_FOLLOWING_COUNT] ?? false ? IBColors.tappedDown : Colors.black,
+                            ),
+                          ),
+                          onTapCancel: () {
+                            setState(() {
+                              taps[IS_TAPPED_FOLLOWING_COUNT] = false;
+                            });
+                          },
+                          onTapDown: (_) {
+                            setState(() {
+                              taps[IS_TAPPED_FOLLOWING_COUNT] = false;
+                            });
+                          },
+                          onTapUp: (_) {
+                            IBWidgetApp.pushWidget(IBWidgetUsersPayloads(false, user.idsFollowing, user.name), context);
+                            setState(() {
+                              taps[IS_TAPPED_FOLLOWING_COUNT] = false;
+                            });
+                          },
+                        ),
+                      ] : []),
+                  runSpacing: SPACING_VERTICAL/2,
+                  spacing: SPACING_HORIZONTAL/2,
                 ),
                 margin: EdgeInsets.only(
-                    top: spacingVertical,
-                    left: spacingHorizontal,
-                    right: spacingHorizontal
+                    top: SPACING_VERTICAL,
+                    left: SPACING_HORIZONTAL,
+                    right: SPACING_HORIZONTAL
                 ),
               ),
             ) : Center(
@@ -448,19 +529,35 @@ class IBStateWidgetUser extends State<IBWidgetUser> {
                   child: Text(
                     user.idsFollowing.isEmpty ? IBLocalString.userNoFollowing : IBLocalString.userFollowingCount(user.idsFollowing.length),
                     style: TextStyle(
+                        color: taps[IS_TAPPED_FOLLOWING_COUNT] ?? false ? IBColors.tappedDown : Colors.black,
                         fontStyle: user.idsFollowing.isEmpty ? FontStyle.italic : FontStyle.normal
                     ),
                   ),
                   margin: EdgeInsets.only(
-                      top: spacingVertical,
-                      left: spacingHorizontal,
-                      right: spacingHorizontal
+                      top: SPACING_VERTICAL,
+                      left: SPACING_HORIZONTAL,
+                      right: SPACING_HORIZONTAL
                   ),
                 ),
+                onTapCancel: () {
+                  setState(() {
+                    taps[IS_TAPPED_FOLLOWING_COUNT] = false;
+                  });
+                },
+                onTapDown: (_) {
+                  if (user.idsFollowing.isNotEmpty) {
+                    setState(() {
+                      taps[IS_TAPPED_FOLLOWING_COUNT] = false;
+                    });
+                  }
+                },
                 onTapUp: (_) {
                   if (user.idsFollowing.isNotEmpty) {
                     IBWidgetApp.pushWidget(IBWidgetUsersPayloads(false, user.idsFollowing, user.name), context);
                   }
+                  setState(() {
+                    taps[IS_TAPPED_FOLLOWING_COUNT] = false;
+                  });
                 },
               ),
             ),
@@ -481,8 +578,8 @@ class IBStateWidgetUser extends State<IBWidgetUser> {
                         ),
                       ),
                       margin: EdgeInsets.only(
-                          top: spacingVertical/2,
-                          bottom: spacingVertical/2
+                          top: SPACING_VERTICAL/2,
+                          bottom: SPACING_VERTICAL/2
                       ),
                     ),
                     Container(
@@ -491,10 +588,11 @@ class IBStateWidgetUser extends State<IBWidgetUser> {
                       margin: EdgeInsets.only(
                       ),
                     )
-                  ] + eventsCreatedActive.map<Widget>((event) => IBWidgetEvent(event)).toList()
+                  ]
+                      + eventsCreatedActive.map<Widget>((event) => IBWidgetEvent(event)).toList()
               ),
               margin: EdgeInsets.only(
-                top: spacingVertical,
+                top: SPACING_VERTICAL,
               ),
             ) : Container(),
             eventsCreatedInactive != null && eventsCreatedInactive.isNotEmpty ? Container(
@@ -514,20 +612,20 @@ class IBStateWidgetUser extends State<IBWidgetUser> {
                         ),
                       ),
                       margin: EdgeInsets.only(
-                          top: spacingVertical/2,
-                          bottom: spacingVertical/2
+                          top: SPACING_VERTICAL/2,
+                          bottom: SPACING_VERTICAL/2
                       ),
                     ),
                     Container(
                       color: IBColors.divider,
                       height: 0.5,
-                      margin: EdgeInsets.only(
-                      ),
+                      margin: EdgeInsets.only(),
                     )
-                  ] + eventsCreatedInactive.map<Widget>((event) => IBWidgetEvent(event)).toList()
+                  ]
+                      + eventsCreatedInactive.map<Widget>((event) => IBWidgetEvent(event)).toList()
               ),
               margin: EdgeInsets.only(
-                top: spacingVertical,
+                top: SPACING_VERTICAL,
               ),
             ) : Container(),
             eventsFollowingActive != null && eventsFollowingActive.isNotEmpty ? Container(
@@ -537,9 +635,9 @@ class IBStateWidgetUser extends State<IBWidgetUser> {
                       color: IBColors.divider,
                       height: 0.5,
                       margin: EdgeInsets.only(
-                          top: spacingVertical,
-                          left: spacingHorizontal,
-                          right: spacingHorizontal
+                          top: SPACING_VERTICAL,
+                          left: SPACING_HORIZONTAL,
+                          right: SPACING_HORIZONTAL
                       ),
                     ),
                     Container(
@@ -550,8 +648,8 @@ class IBStateWidgetUser extends State<IBWidgetUser> {
                         ),
                       ),
                       margin: EdgeInsets.only(
-                          top: spacingVertical/2,
-                          bottom: spacingVertical/2
+                          top: SPACING_VERTICAL/2,
+                          bottom: SPACING_VERTICAL/2
                       ),
                     ),
                     Container(
@@ -563,7 +661,7 @@ class IBStateWidgetUser extends State<IBWidgetUser> {
                   ] + eventsFollowingActive.map<Widget>((event) => IBWidgetEvent(event)).toList()
               ),
               margin: EdgeInsets.only(
-                top: spacingVertical,
+                top: SPACING_VERTICAL,
               ),
             ) : Container(),
             eventsFollowingInactive != null && eventsFollowingInactive.isNotEmpty ?
@@ -585,8 +683,8 @@ class IBStateWidgetUser extends State<IBWidgetUser> {
                           ),
                         ),
                         margin: EdgeInsets.only(
-                            top: spacingVertical/2,
-                            bottom: spacingVertical/2
+                            top: SPACING_VERTICAL/2,
+                            bottom: SPACING_VERTICAL/2
                         ),
                       ),
                     ),
@@ -599,7 +697,7 @@ class IBStateWidgetUser extends State<IBWidgetUser> {
                   ] + eventsFollowingInactive.map<Widget>((event) => IBWidgetEvent(event)).toList()
               ),
               margin: EdgeInsets.only(
-                top: spacingVertical,
+                top: SPACING_VERTICAL,
               ),
             ) : Container(),
           ],
@@ -609,10 +707,10 @@ class IBStateWidgetUser extends State<IBWidgetUser> {
 
 
   follow() {
-    IBFirestore.followUser(user, follow: !isAppUserFollowing);
+    IBFirestore.followUser(user, follow: !isUserAppFollowing);
     setState(() {
-      isAppUserFollowing = !isAppUserFollowing;
-      if (isAppUserFollowing) {
+      isUserAppFollowing = !isUserAppFollowing;
+      if (isUserAppFollowing) {
         IBUserApp.current.idsFollowing.add(user.id);
         user.idsFollowers.add(IBUserApp.current.id);
       }

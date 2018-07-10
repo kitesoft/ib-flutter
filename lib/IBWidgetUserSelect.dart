@@ -11,42 +11,42 @@ import 'package:ib/IBLocalString.dart';
 import 'package:ib/IBWidgetUserIcon.dart';
 
 
-typedef void IBWidgetUserSearchCallback(List<IBFirestoreUser> usersPayloadsSelected);
+typedef void IBCallbackWidgetUserSelect(List<IBFirestoreUser> usersPayloadsSelected);
 
-class IBWidgetUserSearch extends StatefulWidget {
+class IBWidgetUserSelect extends StatefulWidget {
 
-  final IBWidgetUserSearchCallback onSelect;
+  final IBCallbackWidgetUserSelect onSelect;
   final List<String> idsExclude;
   final List<String> idsSelected;
 
-  IBWidgetUserSearch({this.idsExclude, this.idsSelected, this.onSelect, Key key}) : super(key: key);
+  IBWidgetUserSelect({this.idsExclude, this.idsSelected, this.onSelect, Key key}) : super(key: key);
 
   @override
-  IBStateWidgetUserSearch createState() {
-    return IBStateWidgetUserSearch(idsExclude: idsExclude, idsSelected: idsSelected, onSelect: onSelect);
+  IBStateWidgetUserSelect createState() {
+    return IBStateWidgetUserSelect(idsExclude: idsExclude, idsSelected: idsSelected, onSelect: onSelect);
   }
 }
 
 
-class IBStateWidgetUserSearch extends State<IBWidgetUserSearch> {
+class IBStateWidgetUserSelect extends State<IBWidgetUserSelect> {
 
-  static int maxLinesPlace = 1;
+  static const MAX_LINES_PLACE = 1;
 
-  static double sizeHeightContainerPayloadUser = 45.0;
-  static double sizeHeightContainerTextField = 40.0;
-  static double sizeIcon = 25.0;
+  static const SIZE_HEIGHT_CONTAINER_PAYLOAD_USER = 45.0;
+  static const SIZE_HEIGHT_CONTAINER_TEXT_FIELD = 40.0;
+  static const SIZE_ICON = 25.0;
 
-  static double sizeWidthName = 50.0;
+  static const SIZE_WIDTH_NAME = 50.0;
 
-  static double spacingHorizontal = 8.0;
-  static double spacingVertical = 6.0;
-  static double spacingVerticalEdge = 8.0;
+  static const SPACING_HORIZONTAL = 8.0;
+  static const SPACING_VERTICAL = 6.0;
+  static const SPACING_VERTICAL_EDGE = 8.0;
 
-  IBWidgetUserSearchCallback onSelect;
+  IBCallbackWidgetUserSelect onSelect;
   List<String> idsExclude;
   List<String> idsSelected;
 
-  IBStateWidgetUserSearch({this.idsExclude, this.idsSelected, this.onSelect});
+  IBStateWidgetUserSelect({this.idsExclude, this.idsSelected, this.onSelect});
 
   var isTappedAction = false;
 
@@ -106,7 +106,7 @@ class IBStateWidgetUserSearch extends State<IBWidgetUserSearch> {
                       ),
                     ),
                     margin: EdgeInsets.only(
-                        right: spacingHorizontal
+                        right: SPACING_HORIZONTAL
                     ),
                   ),
                 ),
@@ -152,12 +152,12 @@ class IBStateWidgetUserSearch extends State<IBWidgetUserSearch> {
                   decoration: InputDecoration(
                     border: InputBorder.none,
                     contentPadding: EdgeInsets.only(
-                      top: spacingVertical,
+                      top: SPACING_VERTICAL,
 //                                  right: iconSize/2
                     ),
                   ),
                   keyboardType: TextInputType.multiline,
-                  maxLines: maxLinesPlace,
+                  maxLines: MAX_LINES_PLACE,
                   onChanged: (text) {
                     searchUsersPayloads(text);
                   },
@@ -166,10 +166,10 @@ class IBStateWidgetUserSearch extends State<IBWidgetUserSearch> {
                   },
                 ),
               ),
-              height: sizeHeightContainerTextField,
+              height: SIZE_HEIGHT_CONTAINER_TEXT_FIELD,
               margin: EdgeInsets.only(
-                left: spacingHorizontal,
-                right: spacingHorizontal,
+                left: SPACING_HORIZONTAL,
+                right: SPACING_HORIZONTAL,
               ),
             ),
             Container(
@@ -188,9 +188,9 @@ class IBStateWidgetUserSearch extends State<IBWidgetUserSearch> {
                                     payload.id,
                                   ),
                                   margin: EdgeInsets.only(
-                                    top: spacingVertical,
-                                    left: spacingHorizontal,
-                                    bottom: spacingVertical,
+                                    top: SPACING_VERTICAL,
+                                    left: SPACING_HORIZONTAL,
+                                    bottom: SPACING_VERTICAL,
                                   ),
                                 ),
                                 Container(
@@ -203,7 +203,7 @@ class IBStateWidgetUserSearch extends State<IBWidgetUserSearch> {
                                     ),
                                   ),
                                   margin: EdgeInsets.only(
-                                      left: spacingHorizontal/2
+                                      left: SPACING_HORIZONTAL/2
                                   ),
                                 )
                               ],
@@ -217,7 +217,7 @@ class IBStateWidgetUserSearch extends State<IBWidgetUserSearch> {
                                 color: usersPayloadsSelected.contains(payload) ? IBColors.logo : Colors.transparent,
                               ),
                               margin: EdgeInsets.only(
-                                  right: spacingHorizontal
+                                  right: SPACING_HORIZONTAL
                               ),
                             ),
                           ),
@@ -227,7 +227,7 @@ class IBStateWidgetUserSearch extends State<IBWidgetUserSearch> {
                               color: Colors.black26,
                               height: 0.5,
                               margin: EdgeInsets.only(
-                                  left: spacingHorizontal
+                                  left: SPACING_HORIZONTAL
                               ),
                             ),
                           ),
@@ -238,7 +238,7 @@ class IBStateWidgetUserSearch extends State<IBWidgetUserSearch> {
                           )
                         ],
                       ),
-                      height: sizeHeightContainerPayloadUser,
+                      height: SIZE_HEIGHT_CONTAINER_PAYLOAD_USER,
                       padding: EdgeInsets.only(),
                     ),
                     onTapCancel: () {

@@ -18,12 +18,12 @@ import 'package:ib/IBWidgetApp.dart';
 import 'package:ib/IBWidgetUserIcon.dart';
 import 'package:ib/IBWidgetUserLogin.dart';
 
-typedef void IBWidgetUserCreateCompletion();
+typedef void IBCallbackWidgetUserCreate();
 
 class IBWidgetUserCreate extends StatefulWidget {
 
-  final IBWidgetUserCreateCompletion onCreate;
-  final IBWidgetUserCreateCompletion onLogin;
+  final IBCallbackWidgetUserCreate onCreate;
+  final IBCallbackWidgetUserCreate onLogin;
 
   IBWidgetUserCreate({this.onCreate, this.onLogin, Key key}) : super(key: key);
 
@@ -35,34 +35,33 @@ class IBWidgetUserCreate extends StatefulWidget {
 
 class IBStateWidgetUserCreate extends State<IBWidgetUserCreate> {
 
-  static int lengthMaxDescription = 150;
-  static int lengthMaxName = 35;
-  static int lengthMaxPassword;
+  static const LENGTH_MAX_DESCRIPTION = 150;
+  static const LENGTH_MAX_NAME = 35;
 
-  static int lengthMinDescription = 10;
-  static int lengthMinName = 6;
-  static int lengthMinPassword = 8;
+  static const LENGTH_MIN_DESCRIPTION = 10;
+  static const LENGTH_MIN_NAME = 6;
+  static const LENGTH_MIN_PASSWORD = 8;
 
-  static int linesMaxDescription = 3;
-  static int linesMaxName = 1;
-  static int linesMaxPassword = 1;
+  static const LINES_MAX_DESCRIPTION = 3;
+  static const LINES_MAX_NAME = 1;
+  static const LINES_MAX_PASSWORD = 1;
 
-  static double sizeIcon = 25.0;
-  static double sizeUserIcon = 65.0;
+  static const SIZE_ICON = 25.0;
+  static const SIZE_USER_ICON = 65.0;
 
-  static double spacingHorizontal = 8.0;
-  static double spacingVertical = 6.0;
-  static double spacingVerticalEdge = 8.0;
+  static const SPACING_HORIZONTAL = 8.0;
+  static const SPACING_VERTICAL = 6.0;
+  static const SPACING_VERTICAL_EDGE = 8.0;
 
-  IBWidgetUserCreateCompletion onCreate;
-  IBWidgetUserCreateCompletion onLogin;
+  IBCallbackWidgetUserCreate onCreate;
+  IBCallbackWidgetUserCreate onLogin;
 
   IBStateWidgetUserCreate({this.onCreate, this.onLogin});
 
   var fileImage;
 
   bool get isCreateEnabled {
-    return (fileImage != null || isEditMode) && textControllerName.text.trim().length >= lengthMinName && textControllerDescription.text.trim().length >= lengthMinDescription && textControllerPassword.text.length >= lengthMinPassword;
+    return (fileImage != null || isEditMode) && textControllerName.text.trim().length >= LENGTH_MIN_NAME && textControllerDescription.text.trim().length >= LENGTH_MIN_DESCRIPTION && textControllerPassword.text.length >= LENGTH_MIN_PASSWORD;
   }
 
   var isCreating = false;
@@ -139,7 +138,7 @@ class IBStateWidgetUserCreate extends State<IBWidgetUserCreate> {
                         ),
                       ),
                       margin: EdgeInsets.only(
-                          right: spacingHorizontal
+                          right: SPACING_HORIZONTAL
                       ),
                     )
                 ),
@@ -156,7 +155,7 @@ class IBStateWidgetUserCreate extends State<IBWidgetUserCreate> {
                 onTapUp: (_) async {
                   if (isCreateEnabled && (!isEditMode || isEditEnabled) && !isCreating) {
                     isCreating = true;
-                    createUser();
+                    create();
                   }
                 }
             )
@@ -184,10 +183,10 @@ class IBStateWidgetUserCreate extends State<IBWidgetUserCreate> {
               ),
               color: IBColors.logo80,
               padding: EdgeInsets.only(
-                  top: spacingVertical,
-                  left: spacingHorizontal,
-                  right: spacingHorizontal,
-                  bottom: spacingVertical
+                  top: SPACING_VERTICAL,
+                  left: SPACING_HORIZONTAL,
+                  right: SPACING_HORIZONTAL,
+                  bottom: SPACING_VERTICAL
               ),
             ) : Container(),
             !isEditMode ? GestureDetector(
@@ -196,17 +195,17 @@ class IBStateWidgetUserCreate extends State<IBWidgetUserCreate> {
                   child: Text(
                     IBLocalString.userCreateLogin,
                     style: TextStyle(
-                      color: isTappedLogin ? IBColors.logo : Colors.black,
+                      color: isTappedLogin ? IBColors.tappedDown: Colors.black,
                         fontWeight: FontWeight.w400,
                         fontStyle: FontStyle.italic
                     ),
                   ),
                 ),
                 padding: EdgeInsets.only(
-                    top: spacingVertical,
-                    left: spacingHorizontal,
-                    right: spacingHorizontal,
-                    bottom: spacingVertical
+                    top: SPACING_VERTICAL,
+                    left: SPACING_HORIZONTAL,
+                    right: SPACING_HORIZONTAL,
+                    bottom: SPACING_VERTICAL
                 ),
               ),
               onTapCancel: () {
@@ -223,7 +222,7 @@ class IBStateWidgetUserCreate extends State<IBWidgetUserCreate> {
                 setState(() {
                   isTappedLogin = false;
                 });
-                IBWidgetApp.pushWidget(IBWidgetUserLogin(onComplete: () {
+                IBWidgetApp.pushWidget(IBWidgetUserLogin(onLogin: () {
                   Navigator.pop(context);
                   if (onLogin != null) {
                     onLogin();
@@ -247,14 +246,14 @@ class IBStateWidgetUserCreate extends State<IBWidgetUserCreate> {
                   ) : Icon(
                     Icons.add_a_photo,
                     color: Colors.black26,
-                    size: sizeUserIcon,
+                    size: SIZE_USER_ICON,
                   ),
                 ),
-                height: sizeUserIcon,
+                height: SIZE_USER_ICON,
                 margin: EdgeInsets.only(
-                    top: spacingVerticalEdge
+                    top: SPACING_VERTICAL_EDGE
                 ),
-                width: sizeUserIcon,
+                width: SIZE_USER_ICON,
               ),
               onTapUp: (_) {
                 getImage();
@@ -268,14 +267,14 @@ class IBStateWidgetUserCreate extends State<IBWidgetUserCreate> {
                     decoration: InputDecoration(
                         border: InputBorder.none,
                         contentPadding: EdgeInsets.only(
-                          top: spacingVertical,
+                          top: SPACING_VERTICAL,
 //                                  right: iconSize/2
                         ),
                         hintText: IBLocalString.userCreateHintName
                     ),
                     keyboardType: TextInputType.multiline,
-                    maxLines: linesMaxName,
-                    maxLength: lengthMaxName,
+                    maxLines: LINES_MAX_NAME,
+                    maxLength: LENGTH_MAX_NAME,
                     onChanged: (_) {
                       setState(() { });
                     },
@@ -285,20 +284,20 @@ class IBStateWidgetUserCreate extends State<IBWidgetUserCreate> {
                     child: Container(
                       child: Icon(
                         Icons.done,
-                        color: textControllerName.text.trim().length >= lengthMinName ? IBColors.logo : Colors.grey,
-                        size: sizeIcon,
+                        color: textControllerName.text.trim().length >= LENGTH_MIN_NAME ? IBColors.logo : Colors.grey,
+                        size: SIZE_ICON,
                       ),
                       margin: EdgeInsets.only(
-                          top: spacingVertical/2
+                          top: SPACING_VERTICAL/2
                       ),
                     ),
                   )
                 ],
               ),
               margin: EdgeInsets.only(
-                top: spacingVertical,
-                left: spacingHorizontal,
-                right: spacingHorizontal,
+                top: SPACING_VERTICAL,
+                left: SPACING_HORIZONTAL,
+                right: SPACING_HORIZONTAL,
               ),
             ),
             Container(
@@ -309,14 +308,14 @@ class IBStateWidgetUserCreate extends State<IBWidgetUserCreate> {
                     decoration: InputDecoration(
                         border: InputBorder.none,
                         contentPadding: EdgeInsets.only(
-                          top: spacingVertical,
+                          top: SPACING_VERTICAL,
 //                                  right: iconSize/2
                         ),
                         hintText: IBLocalString.userCreateHintDescription
                     ),
                     keyboardType: TextInputType.multiline,
-                    maxLines: linesMaxDescription,
-                    maxLength: lengthMaxDescription,
+                    maxLines: LINES_MAX_DESCRIPTION,
+                    maxLength: LENGTH_MAX_DESCRIPTION,
                     onChanged: (_) {
                       setState(() { });
                     },
@@ -326,20 +325,20 @@ class IBStateWidgetUserCreate extends State<IBWidgetUserCreate> {
                     child: Container(
                       child: Icon(
                         Icons.done,
-                        color: textControllerDescription.text.trim().length >= lengthMinDescription ? IBColors.logo : Colors.grey,
-                        size: sizeIcon,
+                        color: textControllerDescription.text.trim().length >= LENGTH_MIN_DESCRIPTION ? IBColors.logo : Colors.grey,
+                        size: SIZE_ICON,
                       ),
                       margin: EdgeInsets.only(
-                          top: spacingVertical/2
+                          top: SPACING_VERTICAL/2
                       ),
                     ),
                   )
                 ],
               ),
               margin: EdgeInsets.only(
-                top: spacingVertical,
-                left: spacingHorizontal,
-                right: spacingHorizontal,
+                top: SPACING_VERTICAL,
+                left: SPACING_HORIZONTAL,
+                right: SPACING_HORIZONTAL,
               ),
             ),
             !isEditMode ? Container(
@@ -350,14 +349,13 @@ class IBStateWidgetUserCreate extends State<IBWidgetUserCreate> {
                     decoration: InputDecoration(
                         border: InputBorder.none,
                         contentPadding: EdgeInsets.only(
-                          top: spacingVertical,
+                          top: SPACING_VERTICAL,
 //                                  right: iconSize/2
                         ),
                         hintText: IBLocalString.userCreateHintPassword
                     ),
                     keyboardType: TextInputType.multiline,
-                    maxLines: linesMaxPassword,
-                    maxLength: lengthMaxPassword,
+                    maxLines: LINES_MAX_PASSWORD,
                     obscureText: true,
                     onChanged: (_) {
                       setState(() { });
@@ -368,21 +366,21 @@ class IBStateWidgetUserCreate extends State<IBWidgetUserCreate> {
                     child: Container(
                       child: Icon(
                         Icons.done,
-                        color: textControllerPassword.text.length >= lengthMinPassword ? IBColors.logo : Colors.grey,
-                        size: sizeIcon,
+                        color: textControllerPassword.text.length >= LENGTH_MIN_PASSWORD ? IBColors.logo : Colors.grey,
+                        size: SIZE_ICON,
                       ),
                       margin: EdgeInsets.only(
-                          top: spacingVertical/2
+                          top: SPACING_VERTICAL/2
                       ),
                     ),
                   )
                 ],
               ),
               margin: EdgeInsets.only(
-                top: spacingVertical,
-                left: spacingHorizontal,
-                right: spacingHorizontal,
-                bottom: spacingVerticalEdge,
+                top: SPACING_VERTICAL,
+                left: SPACING_HORIZONTAL,
+                right: SPACING_HORIZONTAL,
+                bottom: SPACING_VERTICAL_EDGE,
               ),
             ) : Container(),
           ],
@@ -391,7 +389,7 @@ class IBStateWidgetUserCreate extends State<IBWidgetUserCreate> {
   }
 
 
-  createUser() async {
+  create() async {
     if (isEditMode) {
       var userNameBeforeUpdate = user.name;
       IBUserApp.current.name = textControllerName.text.trim();

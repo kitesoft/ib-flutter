@@ -13,10 +13,10 @@ import 'package:ib/IBLocation.dart';
 
 import 'package:ib/IBWidgetApp.dart';
 import 'package:ib/IBWidgetUserIcon.dart';
-import 'package:ib/IBWidgetUserSearch.dart';
+import 'package:ib/IBWidgetUserSelect.dart';
 
 
-typedef void IBWidgetGroupCreateCompletion(IBFirestoreGroup group);
+typedef void IBCallbackWidgetGroupCreate(IBFirestoreGroup group);
 
 
 class IBWidgetGroupCreate extends StatefulWidget {
@@ -24,44 +24,49 @@ class IBWidgetGroupCreate extends StatefulWidget {
   // edit mode
   final IBFirestoreGroup group;
 
-  final IBWidgetGroupCreateCompletion onComplete;
+  final IBCallbackWidgetGroupCreate onCreate;
 
-  IBWidgetGroupCreate({this.group, this.onComplete, Key key}) : super(key: key);
+  IBWidgetGroupCreate({this.group, this.onCreate, Key key}) : super(key: key);
 
   @override
   IBStateWidgetGroupCreate createState() {
-    return IBStateWidgetGroupCreate(group: group, onComplete: onComplete);
+    return IBStateWidgetGroupCreate(group: group, onCreate: onCreate);
   }
 }
 
 
 class IBStateWidgetGroupCreate extends State<IBWidgetGroupCreate> {
 
-  static int lengthMaxDescription = 150;
-  static int lengthMaxName = 35;
+  static const IS_TAPPED_ACTION = "is_tapped_action";
+  static const IS_TAPPED_SEARCH_USERS = "is_tapped_search_users";
 
-  static int lengthMinDescription = 10;
-  static int lengthMinName = 6;
+  static const LENGTH_MAX_DESCRIPTION = 150;
+  static const LENGTH_MAX_NAME = 35;
 
-  static int linesMaxDescription = 3;
-  static int linesMaxName = 1;
+  static const LENGTH_MIN_DESCRIPTION = 10;
+  static const LENGTH_MIN_NAME = 6;
 
-  static double sizeIcon = 25.0;
-  static double sizeWidthPayload = 65.0;
+  static const LINES_MAX_DESCRIPTION = 3;
+  static const LINES_MAX_NAME = 1;
 
-  static double spacingHorizontal = 8.0;
-  static double spacingVertical = 6.0;
-  static double spacingVerticalEdge = 8.0;
+  static const SIZE_ICON = 25.0;
+  static const SIZE_WIDTH_PAYLOAD = 65.0;
+
+  static const SPACING_HORIZONTAL = 8.0;
+  static const SPACING_VERTICAL = 6.0;
+  static const SPACING_VERTICAL_EDGE = 8.0;
 
   IBFirestoreGroup group;
-  IBWidgetGroupCreateCompletion onComplete;
+  IBCallbackWidgetGroupCreate onCreate;
 
-  IBStateWidgetGroupCreate({this.group, this.onComplete});
+  IBStateWidgetGroupCreate({this.group, this.onCreate});
 
   var focusNodeSearch = FocusNode();
 
+  var idsUsersSelected = List<IBFirestoreUser>();
+
   bool get isCreateEnabled {
-    return textControllerName.text.trim().length >= lengthMinName && textControllerDescription.text.trim().length >= lengthMinDescription;
+    return textControllerName.text.trim().length >= LENGTH_MIN_NAME && textControllerDescription.text.trim().length >= LENGTH_MIN_DESCRIPTION;
   }
 
   var isCreating = false;
@@ -74,16 +79,14 @@ class IBStateWidgetGroupCreate extends State<IBWidgetGroupCreate> {
     return group != null;
   }
 
-  var isTappedIcon = false;
-  var isTappedSearch = false;
-
   var scrollController = ScrollController();
+
+  var taps = Map<String, bool>();
 
   var textControllerDescription = TextEditingController();
   var textControllerName = TextEditingController();
   var textControllerSearch = TextEditingController();
 
-  var idsUsersSelected = List<IBFirestoreUser>();
 
   @override
   void initState() {
@@ -124,30 +127,33 @@ class IBStateWidgetGroupCreate extends State<IBWidgetGroupCreate> {
                     child: Text(
                       isEditMode ? IBLocalString.groupCreateEdit : IBLocalString.groupCreate,
                       style: TextStyle(
-                          color: isCreateEnabled && (!isEditMode || isEditEnabled) ? isTappedIcon ? IBColors.tappedDownLight : Colors.white : IBColors.actionDisable,
+                          color: isCreateEnabled && (!isEditMode || isEditEnabled) ? taps[IS_TAPPED_ACTION] ?? false ? IBColors.tappedDownLight : Colors.white : IBColors.actionDisable,
                           fontSize: Theme.of(context).textTheme.title.fontSize,
                           fontWeight: Theme.of(context).textTheme.title.fontWeight
                       ),
                     ),
                     margin: EdgeInsets.only(
-                        right: spacingHorizontal
+                        right: SPACING_HORIZONTAL
                     ),
                   ),
                 ),
                 onTapCancel: () {
                   setState(() {
-                    isTappedIcon = false;
+                    taps[IS_TAPPED_ACTION] = false;
                   });
                 },
                 onTapDown: (_) {
                   setState(() {
-                    isTappedIcon = true;
+                    taps[IS_TAPPED_ACTION] = true;
                   });
                 },
                 onTapUp: (_) async {
                   if (isCreateEnabled && (!isEditMode || isEditEnabled) && !isCreating) {
                     isCreating = true;
-                    createGroup();
+                    create();
+                  }
+                  if (!isCreating) {
+                    taps[IS_TAPPED_ACTION] = false;
                   }
                 }
             ),
@@ -184,15 +190,15 @@ class IBStateWidgetGroupCreate extends State<IBWidgetGroupCreate> {
                                 hintText: IBLocalString.groupCreateHintName
                             ),
                             keyboardType: TextInputType.multiline,
-                            maxLines: linesMaxName,
-                            maxLength: lengthMaxName,
+                            maxLines: LINES_MAX_NAME,
+                            maxLength: LENGTH_MAX_NAME,
                             onChanged: (_) {
                               setState(() {
                               });
                             },
                           ),
                           margin: EdgeInsets.only(
-                            top: spacingVertical,
+                            top: SPACING_VERTICAL,
 //                            left: spacingHorizontal
                           ),
                         ),
@@ -201,20 +207,20 @@ class IBStateWidgetGroupCreate extends State<IBWidgetGroupCreate> {
                           child: Container(
                             child: Icon(
                               Icons.done,
-                              color: textControllerName.text.trim().length >= lengthMinName ? IBColors.logo : Colors.grey,
-                              size: sizeIcon,
+                              color: textControllerName.text.trim().length >= LENGTH_MIN_NAME ? IBColors.logo : Colors.grey,
+                              size: SIZE_ICON,
                             ),
                             margin: EdgeInsets.only(
-                                top: spacingVertical/2
+                                top: SPACING_VERTICAL/2
                             ),
                           ),
                         )
                       ],
                     ),
                     margin: EdgeInsets.only(
-                      top: spacingVertical,
-                      left: spacingHorizontal,
-                      right: spacingHorizontal,
+                      top: SPACING_VERTICAL,
+                      left: SPACING_HORIZONTAL,
+                      right: SPACING_HORIZONTAL,
                     ),
                   ),
                   Container(
@@ -231,15 +237,15 @@ class IBStateWidgetGroupCreate extends State<IBWidgetGroupCreate> {
                                 hintText: IBLocalString.groupCreateHintDescription
                             ),
                             keyboardType: TextInputType.multiline,
-                            maxLength: lengthMaxDescription,
-                            maxLines: linesMaxDescription,
+                            maxLength: LENGTH_MAX_DESCRIPTION,
+                            maxLines: LINES_MAX_DESCRIPTION,
                             onChanged: (_) {
                               setState(() {
                               });
                             },
                           ),
                           margin: EdgeInsets.only(
-                            top: spacingVertical,
+                            top: SPACING_VERTICAL,
 //                            left: spacingHorizontal
                           ),
                         ),
@@ -248,20 +254,20 @@ class IBStateWidgetGroupCreate extends State<IBWidgetGroupCreate> {
                           child: Container(
                             child: Icon(
                               Icons.done,
-                              color: textControllerDescription.text.trim().length >= lengthMinDescription ? IBColors.logo : Colors.grey,
-                              size: sizeIcon,
+                              color: textControllerDescription.text.trim().length >= LENGTH_MIN_DESCRIPTION ? IBColors.logo : Colors.grey,
+                              size: SIZE_ICON,
                             ),
                             margin: EdgeInsets.only(
-                                top: spacingVertical/2
+                                top: SPACING_VERTICAL/2
                             ),
                           ),
                         )
                       ],
                     ),
                     margin: EdgeInsets.only(
-                      top: spacingVertical,
-                      left: spacingHorizontal,
-                      right: spacingHorizontal,
+                      top: SPACING_VERTICAL,
+                      left: SPACING_HORIZONTAL,
+                      right: SPACING_HORIZONTAL,
                     ),
                   ),
                   !isEditMode ? Container(
@@ -273,8 +279,8 @@ class IBStateWidgetGroupCreate extends State<IBWidgetGroupCreate> {
                         ),
                       ),
                       margin: EdgeInsets.only(
-                        top: spacingVertical,
-                        left: spacingHorizontal,
+                        top: SPACING_VERTICAL,
+                        left: SPACING_HORIZONTAL,
                       )
                   ) : Container(),
                   !isEditMode && idsUsersSelected.isNotEmpty ? Container(
@@ -287,7 +293,7 @@ class IBStateWidgetGroupCreate extends State<IBWidgetGroupCreate> {
                                 child: IBWidgetUserIcon(
                                     payload.id
                                 ),
-                                height: sizeWidthPayload,
+                                height: SIZE_WIDTH_PAYLOAD,
                               ),
                               Container(
                                 child: Text(
@@ -296,52 +302,52 @@ class IBStateWidgetGroupCreate extends State<IBWidgetGroupCreate> {
                                   textAlign: TextAlign.center,
                                 ),
                                 margin: EdgeInsets.only(
-                                    top: spacingVertical/2
+                                    top: SPACING_VERTICAL/2
                                 ),
-                                width: sizeWidthPayload,
+                                width: SIZE_WIDTH_PAYLOAD,
                               )
                             ],
                           ),
                           margin: EdgeInsets.only(
-                            left: spacingHorizontal/2,
-                            right: spacingHorizontal/2,
+                            left: SPACING_HORIZONTAL/2,
+                            right: SPACING_HORIZONTAL/2,
                           ),
                         );
                       }).toList(),
                       scrollDirection: Axis.horizontal,
                     ),
-                    height: sizeWidthPayload + 16.0 + spacingVertical/2, // font size plus margin
+                    height: SIZE_WIDTH_PAYLOAD + 16.0 + SPACING_VERTICAL/2, // font size plus margin
                     margin: EdgeInsets.only(
-                      top: spacingVertical,
-                      left: spacingHorizontal/2,
-                      right: spacingHorizontal/2,
+                      top: SPACING_VERTICAL,
+                      left: SPACING_HORIZONTAL/2,
+                      right: SPACING_HORIZONTAL/2,
                     ),
-                    width: sizeWidthPayload,
+                    width: SIZE_WIDTH_PAYLOAD,
                   ) : Container(),
                   !isEditMode ? Container(
                     child: GestureDetector(
                       child: Text(
                         IBLocalString.groupCreateSearchMembers,
                         style: TextStyle(
-                            color: isTappedSearch ? IBColors.logo : Colors.black,
+                            color: taps[IS_TAPPED_SEARCH_USERS] ?? false ? IBColors.logo : Colors.black,
                             fontSize: 16.0
                         ),
                       ),
                       onTapCancel: () {
                         setState(() {
-                          isTappedSearch = false;
+                          taps[IS_TAPPED_SEARCH_USERS] = false;
                         });
                       },
                       onTapDown: (_) {
                         setState(() {
-                          isTappedSearch = true;
+                          taps[IS_TAPPED_SEARCH_USERS] = true;
                         });
                       },
                       onTapUp: (_) {
                         setState(() {
-                          isTappedSearch = false;
+                          taps[IS_TAPPED_SEARCH_USERS] = false;
                         });
-                        IBWidgetApp.pushWidget(IBWidgetUserSearch(idsSelected: idsUsersSelected.map((userPayload) => userPayload.id).toList(), onSelect: (payloads) {
+                        IBWidgetApp.pushWidget(IBWidgetUserSelect(idsSelected: idsUsersSelected.map((userPayload) => userPayload.id).toList(), onSelect: (payloads) {
                           setState(() {
                             this.idsUsersSelected.addAll(payloads);
                           });
@@ -349,8 +355,8 @@ class IBStateWidgetGroupCreate extends State<IBWidgetGroupCreate> {
                       },
                     ),
                     margin: EdgeInsets.only(
-                      top: spacingVertical,
-                      left: spacingHorizontal,
+                      top: SPACING_VERTICAL,
+                      left: SPACING_HORIZONTAL,
                     ),
                   ) : Container(),
                 ],
@@ -363,7 +369,7 @@ class IBStateWidgetGroupCreate extends State<IBWidgetGroupCreate> {
     );
   }
 
-  createGroup() async {
+  create() async {
     if (isEditMode) {
       var groupNameBeforeUpdate = group.name;
       group.name = textControllerName.text.trim();
@@ -378,21 +384,8 @@ class IBStateWidgetGroupCreate extends State<IBWidgetGroupCreate> {
     }
     await IBFirestore.addGroup(group);
     Navigator.pop(context);
-    if (onComplete != null) {
-      onComplete(group);
+    if (onCreate != null) {
+      onCreate(group);
     }
   }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-

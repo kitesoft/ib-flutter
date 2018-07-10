@@ -18,7 +18,7 @@ import 'package:ib/IBWidgetEventCreate.dart';
 import 'package:ib/IBWidgetGroupCreate.dart';
 import 'package:ib/IBWidgetUser.dart';
 import 'package:ib/IBWidgetUserIcon.dart';
-import 'package:ib/IBWidgetUserSearch.dart';
+import 'package:ib/IBWidgetUserSelect.dart';
 
 
 class IBWidgetGroup extends StatefulWidget {
@@ -120,7 +120,7 @@ class IBStateWidgetGroup extends State<IBWidgetGroup> {
                 IBWidgetApp.pushWidget(IBWidgetGroupCreate(group: group), context);
               }
               else if (value == IBLocalString.groupActionAddMembers) {
-                IBWidgetApp.pushWidget(IBWidgetUserSearch(idsExclude: group.idsMembers, onSelect: (usersPayloadsSelected) {
+                IBWidgetApp.pushWidget(IBWidgetUserSelect(idsExclude: group.idsMembers, onSelect: (usersPayloadsSelected) {
                   addIdsMembers(usersPayloadsSelected);
                 }), context);
               }
@@ -169,20 +169,20 @@ class IBStateWidgetGroup extends State<IBWidgetGroup> {
                 ),
               ]);
 
-              if (group.idsMembers.length > 1) {
-                items.add(                // leave group
-                  PopupMenuItem<String>(
-                    value: IBLocalString.groupActionLeave,
-                    child: Row(
-                      children: <Widget>[
-                        Text(
-                            IBLocalString.groupActionLeave
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              }
+//              if (group.idsMembers.length > 1) {
+//                items.add(                // leave group
+//                  PopupMenuItem<String>(
+//                    value: IBLocalString.groupActionLeave,
+//                    child: Row(
+//                      children: <Widget>[
+//                        Text(
+//                            IBLocalString.groupActionLeave
+//                        ),
+//                      ],
+//                    ),
+//                  ),
+//                );
+//              }
 
               return items;
             },

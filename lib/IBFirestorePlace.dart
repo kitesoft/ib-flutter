@@ -8,8 +8,8 @@ class IBFirestorePlace {
   int get hashCode => id.hashCode;
 
   // ordered from most specific to less specific
-  static const List<String> typesEventsAdd = ["neighborhood", "sublocality", "locality", "administrative_area_level_2", "administrative_area_level_1", "country"];
-  static const List<String> typesEventValid = ["establishment", "point_of_interest", "street_address", "street_number", "route", "neighborhood", "sublocality"];
+  static const List<String> typesPlacesEventAdd = ["neighborhood", "sublocality", "locality", "administrative_area_level_2", "administrative_area_level_1", "country"];
+  static const List<String> typesPlacesEvent = ["establishment", "point_of_interest", "street_address", "street_number", "route", "neighborhood", "sublocality"];
 
   String id;
   String name;
@@ -27,12 +27,10 @@ class IBFirestorePlace {
 
   List<String> idsFollowers;
 
-
   IBFirestorePlace(this.id, this.name, this.type) {
     places = [];
     idsFollowers = [];
   }
-
 
   IBFirestorePlace.firestore(this.id, Map data) {
 
@@ -53,7 +51,6 @@ class IBFirestorePlace {
     places = (data[IBFirestore.PLACES] ?? Map()).entries.map<IBFirestorePlace>((entry) => IBFirestorePlace.firestoreEvent(entry.key, entry.value)).toList();
   }
 
-
   IBFirestorePlace.firestoreEvent(this.type, Map data) {
     id = data[IBFirestore.ID];
     name = data[IBFirestore.NAME];
@@ -65,11 +62,11 @@ class IBFirestorePlace {
   IBFirestorePlace.googlePlace(GooglePlace gPlace) {
 
     id = gPlace.id;
-    name = gPlace.name ?? (gPlace.addressComponents != null && gPlace.addressComponents.isNotEmpty ? gPlace.addressComponents.first.shortName : null);
+    name = gPlace.name ?? (gPlace.addressComponents != null && gPlace.addressComponents.isNotEmpty ? gPlace.addressComponents.first.longName : null);
     description = gPlace.description;
     address = gPlace.address;
 
-    var types = gPlace.types.where((type) => typesEventValid.contains(type) || typesEventsAdd.contains(type)).toList();
+    var types = gPlace.types.where((type) => typesPlacesEvent.contains(type) || typesPlacesEventAdd.contains(type)).toList();
     if (types.isNotEmpty) {
       type = types.first;
     }
@@ -107,6 +104,7 @@ class IBFirestorePlace {
       IBFirestore.COORDINATE_LON : lon,
       IBFirestore.IDS_FOLLOWERS : idsFollowers.asMap().map((_, id) => MapEntry(id, true)),
       IBFirestore.DURATION_ADDING_DISTANCES : durationAddingDistances,
+      IBFirestore.PLACES_DISTANCES :  places.asMap().map((_, place) => MapEntry(place.id, place.mapPayloadDistance))
     };
   }
 
@@ -117,7 +115,16 @@ class IBFirestorePlace {
     };
   }
 
-  Map<String, dynamic> get mapPayloadPlace {
+  Map<String, dynamic> get mapPayloadEventMain {
+    return {
+      IBFirestore.ID : id,
+      IBFirestore.NAME : name,
+      IBFirestore.COORDINATE_LON : lon,
+      IBFirestore.COORDINATE_LAT : lat,
+    };
+  }
+
+  Map<String, dynamic> get mapPayloadDistance {
     return {
       IBFirestore.ID : id,
       IBFirestore.TYPE : type,
@@ -125,7 +132,7 @@ class IBFirestorePlace {
     };
   }
 
-  Map<String, dynamic> get mapPayloadUser {
+  Map<String, dynamic> get mapPayloadFollowing {
     return {
       IBFirestore.NAME : name,
       IBFirestore.TYPE : type,

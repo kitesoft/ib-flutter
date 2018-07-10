@@ -11,38 +11,38 @@ import 'package:ib/IBFirestorePlace.dart';
 import 'package:ib/IBLocalString.dart';
 import 'package:ib/IBLocation.dart';
 
-typedef void IBWidgetPlaceSearchCallback(IBFirestorePlace placeSelected);
+typedef void IBCallbackWidgetPlaceSelect(IBFirestorePlace placeSelected);
 
-class IBWidgetPlaceSearch extends StatefulWidget {
+class IBWidgetPlaceSelect extends StatefulWidget {
 
-  final IBWidgetPlaceSearchCallback onSelect;
+  final IBCallbackWidgetPlaceSelect onSelect;
   final IBFirestorePlace placeSelected;
 
-  IBWidgetPlaceSearch({this.onSelect, this.placeSelected, Key key}) : super(key: key);
+  IBWidgetPlaceSelect({this.onSelect, this.placeSelected, Key key}) : super(key: key);
 
   @override
-  IBStateWidgetPlaceSearch createState() {
-    return IBStateWidgetPlaceSearch(onSelect: onSelect, placeSelected: placeSelected);
+  IBStateWidgetPlaceSelect createState() {
+    return IBStateWidgetPlaceSelect(onSelect: onSelect, placeSelected: placeSelected);
   }
 }
 
-class IBStateWidgetPlaceSearch extends State<IBWidgetPlaceSearch> {
+class IBStateWidgetPlaceSelect extends State<IBWidgetPlaceSelect> {
 
-  static int lengthMinAutocomplete = 4;
+  static const LENGTH_MIN_AUTOCOMPLETE = 4;
 
-  static int linesMaxPlace = 1;
+  static const LINES_MAX_PLACE = 1;
 
-  static double sizeIcon = 25.0;
-  static double sizeHeightContainerTextField = 40.0;
+  static const SIZE_ICON = 25.0;
+  static const SIZE_HEIGHT_CONTAINER_TEXT_FIELD = 40.0;
 
-  static double spacingHorizontal = 8.0;
-  static double spacingVertical = 6.0;
-  static double spacingVerticalEdge = 8.0;
+  static const SPACING_HORIZONTAL = 8.0;
+  static const SPACING_VERTICAL = 6.0;
+  static const SPACING_VERTICAL_EDGE = 8.0;
 
-  IBWidgetPlaceSearchCallback onSelect;
+  IBCallbackWidgetPlaceSelect onSelect;
   IBFirestorePlace placeSelected;
 
-  IBStateWidgetPlaceSearch({this.onSelect, this.placeSelected});
+  IBStateWidgetPlaceSelect({this.onSelect, this.placeSelected});
 
   List<IBFirestorePlace> places = List<IBFirestorePlace>();
 
@@ -101,12 +101,12 @@ class IBStateWidgetPlaceSearch extends State<IBWidgetPlaceSearch> {
                       decoration: InputDecoration(
                           border: InputBorder.none,
                           contentPadding: EdgeInsets.only(
-                            top: spacingVertical,
+                            top: SPACING_VERTICAL,
 //                                  right: iconSize/2
                           ),
                       ),
                       keyboardType: TextInputType.multiline,
-                      maxLines: linesMaxPlace,
+                      maxLines: LINES_MAX_PLACE,
                       onChanged: (text) {
                         autocomplete(text);
                       },
@@ -121,16 +121,16 @@ class IBStateWidgetPlaceSearch extends State<IBWidgetPlaceSearch> {
                       child: Icon(
                         Icons.done,
                         color: placeSelected != null ? IBColors.logo : Colors.grey,
-                        size: sizeIcon,
+                        size: SIZE_ICON,
                       ),
                     ),
                   )
                 ],
               ),
-              height: sizeHeightContainerTextField,
+              height: SIZE_HEIGHT_CONTAINER_TEXT_FIELD,
               margin: EdgeInsets.only(
-                left: spacingHorizontal,
-                right: spacingHorizontal,
+                left: SPACING_HORIZONTAL,
+                right: SPACING_HORIZONTAL,
               ),
             ),
             Container(
@@ -157,7 +157,7 @@ class IBStateWidgetPlaceSearch extends State<IBWidgetPlaceSearch> {
                                           ),
                                         ),
                                         margin: EdgeInsets.only(
-                                            top: spacingVertical
+                                            top: SPACING_VERTICAL
                                         ),
                                       ),
                                       Container(
@@ -171,8 +171,8 @@ class IBStateWidgetPlaceSearch extends State<IBWidgetPlaceSearch> {
                                           maxLines: 2,
                                         ),
                                         margin: EdgeInsets.only(
-                                            top: spacingVertical/2,
-                                            bottom: spacingVertical
+                                            top: SPACING_VERTICAL/2,
+                                            bottom: SPACING_VERTICAL
                                         ),
                                       ),
                                       Container(
@@ -196,7 +196,7 @@ class IBStateWidgetPlaceSearch extends State<IBWidgetPlaceSearch> {
                         ],
                       ),
                       padding: EdgeInsets.only(
-                          left: spacingHorizontal
+                          left: SPACING_HORIZONTAL
                       ),
                     ),
                     onTapUp: (_) {
@@ -222,10 +222,10 @@ class IBStateWidgetPlaceSearch extends State<IBWidgetPlaceSearch> {
         places = [];
       });
     }
-    else if (text.trim().length > lengthMinAutocomplete && text.length >= textControllerPlace.text.length) {
+    else if (text.trim().length > LENGTH_MIN_AUTOCOMPLETE && text.length >= textControllerPlace.text.length) {
       var autocompletions = await GoogleAPI.autocomplete(text: text, lat: IBLocation.latitude, lon: IBLocation.longitude);
       var places = autocompletions.map<IBFirestorePlace>((gPlace) => IBFirestorePlace.googlePlace(gPlace)).toList();
-      var filteredPlaces = places.where((place) => IBFirestorePlace.typesEventValid.contains(place.type)).toList();
+      var filteredPlaces = places.where((place) => IBFirestorePlace.typesPlacesEvent.contains(place.type)).toList();
       setState(() {
         this.places = filteredPlaces;
       });

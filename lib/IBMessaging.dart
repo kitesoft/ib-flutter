@@ -9,6 +9,8 @@ import 'package:http/http.dart';
 
 class IBMessaging {
 
+  static const ID_EVENT = "id_event";
+
   static var instance = new FirebaseMessaging();
 
   static var serverKey = "AAAAa7QO-FQ:APA91bFoGBEuQj26c_cfWS9I0VfCFMdZrP_EYR40Cb4eu-gUOSNKumgiIyIZJkljBhxGHBSWwOmrgC8ewxjCsvhQ5oxTMfW_p6BHGDXNSSLR5j1G8n8VvobJAsWxV0TmNtylKm2RfSAS-svxWw6bbZTABHfsLNucZg";

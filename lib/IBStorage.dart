@@ -9,7 +9,6 @@ class IBStorage {
   static var reference =  FirebaseStorage.instance.ref();
 
   static upload(File file, String id, {int index = 0}) async {
-    // TODO: REVIEW IF ITS ALWAYS JPG
     var metadata = StorageMetadata(contentType: "image/jpg");
     reference.child(id).child("image$index").putFile(file, metadata);
   }

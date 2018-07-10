@@ -31,17 +31,17 @@ class GoogleAddressComponent {
 class GooglePlace {
 
   String id;
-  List<String> types;
 
   String name;
   String description;
 
   String address;
+  var addressComponents =  List<GoogleAddressComponent>();
 
   double lat;
   double lon;
 
-  List<GoogleAddressComponent> addressComponents;
+  var types = List<String>();
 
   GoogleAddressComponent get cityComponent {
     return addressComponents.firstWhere((component) => component.isCity);
@@ -60,27 +60,23 @@ class GooglePlace {
     address = map["formatted_address"];
     lat = map["geometry"]["location"]["lat"];
     lon = map["geometry"]["location"]["lng"];
-    types = List<String>();
     map["types"].forEach((type) => types.add(type));
-    addressComponents = List<GoogleAddressComponent>();
     map["address_components"].forEach((component) => addressComponents.add(GoogleAddressComponent.geocode(component)));
   }
 
   GooglePlace.autocompletion(Map map) {
     id = map["place_id"];
-    types = List<String>();
-    map["types"].forEach((type) => types.add(type));
     name = map["structured_formatting"]["main_text"];
     description = map["description"];
+    map["types"].forEach((type) => types.add(type));
   }
 
-  addGeocode(Map geocode) {
-    address = geocode["formatted_address"];
-    lat = geocode["geometry"]["location"]["lat"];
-    lon = geocode["geometry"]["location"]["lng"];
-    types = List<String>();
-    geocode["types"].forEach((type) => types.add(type));
+  addGeocode(Map map) {
+    address = map["formatted_address"];
     addressComponents = List<GoogleAddressComponent>();
-    geocode["address_components"].forEach((component) => addressComponents.add(GoogleAddressComponent.geocode(component)));
+    lat = map["geometry"]["location"]["lat"];
+    lon = map["geometry"]["location"]["lng"];
+    map["types"].forEach((type) => types.add(type));
+    map["address_components"].forEach((component) => addressComponents.add(GoogleAddressComponent.geocode(component)));
   }
 }

@@ -60,7 +60,6 @@ class IBFirestoreUser {
       IBFirestore.DESCRIPTION : description,
       IBFirestore.CODE_LANGUAGE : codeLanguage,
       IBFirestore.PASSWORD : password,
-      IBFirestore.TOKEN : token
     };
   }
 

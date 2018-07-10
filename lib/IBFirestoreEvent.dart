@@ -1,4 +1,6 @@
 
+import 'dart:math';
+
 import 'package:ib/IBDateTime.dart';
 import 'package:ib/IBFirestore.dart';
 import 'package:ib/IBFirestorePlace.dart';
@@ -35,10 +37,12 @@ class IBFirestoreEvent {
 
     countFollowersDouble = data[IBFirestore.COUNT_FOLLOWERS];
 
-    idCreator = (data[IBFirestore.ID_CREATOR] ?? Map()).entries.first.key;
+    if (data[IBFirestore.ID_CREATOR] != null) {
+      idCreator = data[IBFirestore.ID_CREATOR].entries.first.key;
+    }
 
     if (data[IBFirestore.ID_GROUP] != null) {
-      idGroup = (data[IBFirestore.ID_GROUP] ?? Map()).entries.first.key;
+      idGroup = data[IBFirestore.ID_GROUP].entries.first.key;
     }
 
     idsFollowers = List<String>();
@@ -48,7 +52,7 @@ class IBFirestoreEvent {
 
     places = (data[IBFirestore.PLACES] ?? Map()).entries.map<IBFirestorePlace>((entry) => IBFirestorePlace.firestoreEvent(entry.key, entry.value)).toList();
 
-    var allTypes = IBFirestorePlace.typesEventValid + IBFirestorePlace.typesEventsAdd;
+    var allTypes = IBFirestorePlace.typesPlacesEvent + IBFirestorePlace.typesPlacesEventAdd;
     places.sort((place1, place2) => allTypes.indexOf(place1.type).compareTo(allTypes.indexOf(place2.type)));
     placePayload = places.first;
 
@@ -60,41 +64,9 @@ class IBFirestoreEvent {
     return idsFollowers.length;
   }
 
-  double get countFollowersDoubleFresh {
-    int divisor;
-    var hashCodeId = id.hashCode;
-    if (hashCodeId < 10) {
-      divisor = 10;
-    }
-    else if (hashCodeId < 100) {
-      divisor = 100;
-    }
-    else if (hashCodeId < 1000) {
-      divisor = 1000;
-    }
-    else if (hashCodeId < 10000) {
-      divisor = 10000;
-    }
-    else if (hashCodeId < 100000) {
-      divisor = 100000;
-    }
-    else if (hashCodeId < 1000000) {
-      divisor = 1000000;
-    }
-    else if (hashCodeId < 10000000) {
-      divisor = 10000000;
-    }
-    else if (hashCodeId < 100000000) {
-      divisor = 100000000;
-    }
-    else if (hashCodeId < 1000000000) {
-      divisor = 1000000000;
-    }
-    else if (hashCodeId < 10000000000) {
-      divisor = 10000000000;
-    }
-    countFollowersDouble = countFollowers + id.hashCode/divisor;
-    return countFollowers + id.hashCode/divisor;
+  double get countFollowersDoubleNew {
+    var hashTimestamp = (IBDateTime.timestampNow * 1000).toInt();
+    return pow(10, hashTimestamp.toString().length - 1)/hashTimestamp;
   }
 
   bool get didStart {
@@ -128,8 +100,8 @@ class IBFirestoreEvent {
       IBFirestore.TIMESTAMP_START : timestampStart,
       IBFirestore.TIMESTAMP_END : timestampEnd,
       IBFirestore.ID_CREATOR : [idCreator].asMap().map((_, id) => MapEntry(id, true)),
-      IBFirestore.PLACES : places.asMap().map((_, place) => MapEntry(place.type, place.mapPayloadEvent)),
-      IBFirestore.COUNT_FOLLOWERS : countFollowersDoubleFresh,
+      IBFirestore.PLACES : places.asMap().map((_, place) => MapEntry(place.type, IBFirestorePlace.typesPlacesEvent.contains(place.type) ? place.mapPayloadEventMain : place.mapPayloadEvent)),
+      IBFirestore.COUNT_FOLLOWERS : countFollowersDoubleNew,
       IBFirestore.IS_ACTIVE : isActive
     };
     if (idGroup != null) {

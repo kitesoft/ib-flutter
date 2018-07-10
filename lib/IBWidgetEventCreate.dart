@@ -19,7 +19,7 @@ import 'package:ib/IBLocation.dart';
 
 import 'package:ib/IBWidgetApp.dart';
 import 'package:ib/IBWidgetGroupCreate.dart';
-import 'package:ib/IBWidgetPlaceSearch.dart';
+import 'package:ib/IBWidgetPlaceSelect.dart';
 
 
 class IBWidgetEventCreate extends StatefulWidget {
@@ -40,22 +40,29 @@ class IBWidgetEventCreate extends StatefulWidget {
 
 class IBStateWidgetEventCreate extends State<IBWidgetEventCreate> {
 
-  static int lengthMaxDescription = 150;
-  static int lengthMaxName = 35;
+  static const String IS_TAPPED_ACTION = "is_tapped_action";
+  static const String IS_TAPPED_PLACE = "is_tapped_place";
+  static const String IS_TAPPED_END_DATE = "is_tapped_end_date";
+  static const String IS_TAPPED_START_DATE = "is_tapped_start_date";
+  static const String IS_TAPPED_END_TIME_OF_DAY = "is_tapped_end_time_of_day";
+  static const String IS_TAPPED_START_TIME_OF_DAY = "is_tapped_start_time_of_day";
 
-  static int lengthMinDescription = 10;
-  static int lengthMinName = 6;
+  static const int LENGTH_MAX_DESCRIPTION = 150;
+  static const int LENGTH_MAX_NAME = 35;
 
-  static int linesMaxDescription = 3;
-  static int linesMaxName = 1;
+  static const int LENGTH_MIN_DESCRIPTION = 10;
+  static const int LENGTH_MIN_NAME = 6;
 
-  static int requestDelayMilliseconds = 500;
+  static const int LINES_MAX_DESCRIPTION = 3;
+  static const int LINES_MAX_NAME = 1;
 
-  static double sizeIcon = 25.0;
+  static const int MILLISECONDS_DELAY_REQUESTS = 500;
 
-  static double spacingHorizontal = 8.0;
-  static double spacingVertical = 6.0;
-  static double spacingVerticalEdge = 8.0;
+  static const double SIZE_ICON = 25.0;
+
+  static const double SPACING_HORIZONTAL = 8.0;
+  static const double SPACING_VERTICAL = 6.0;
+  static const double SPACING_VERTICAL_EDGE = 8.0;
 
   IBFirestoreEvent event;
   IBFirestoreGroup group;
@@ -63,6 +70,7 @@ class IBStateWidgetEventCreate extends State<IBWidgetEventCreate> {
   IBStateWidgetEventCreate({this.event, this.group});
 
   DateTime dayEnd;
+  var dayEndLast = DateTime(IBDateTime.dateNow.year + 1, IBDateTime.dateNow.month, IBDateTime.dateNow.day); // one year after
   DateTime dayStart;
 
   var didGetGroups = false;
@@ -73,7 +81,7 @@ class IBStateWidgetEventCreate extends State<IBWidgetEventCreate> {
   IBFirestorePlace placePayload; // only for editing
 
   bool get isCreateEnabled {
-    return textControllerName.text.trim().length >= lengthMinName && textControllerDescription.text.trim().length >= lengthMinDescription && (placeSelected != null || placePayload != null) && dayStart != null && dayEnd != null && timeOfDayEnd != null && timeOfDayStart != null && isEndTimeOfDayValid;
+    return textControllerName.text.trim().length >= LENGTH_MIN_NAME && textControllerDescription.text.trim().length >= LENGTH_MIN_DESCRIPTION && (placeSelected != null || placePayload != null) && dayStart != null && dayEnd != null && timeOfDayEnd != null && timeOfDayStart != null && isEndTimeOfDayValid;
   }
 
   var isCreating = false;
@@ -99,23 +107,20 @@ class IBStateWidgetEventCreate extends State<IBWidgetEventCreate> {
 
   var isIcon1TappedDown = false;
 
-  var isTappedPlace = false;
-  var isTappedEndDate = false;
-  var isTappedStartDate = false;
-  var isTappedEndTimeOfDate = false;
-  var isTappedStartTimeOfDate = false;
-
   var groupsPayloads = List<IBFirestoreGroup>();
 
   IBFirestorePlace placeSelected;
 
   var scrollController = ScrollController();
 
+  var taps = {IS_TAPPED_ACTION : false, IS_TAPPED_PLACE : false, IS_TAPPED_END_DATE : false, IS_TAPPED_START_DATE : false, IS_TAPPED_END_TIME_OF_DAY : false, IS_TAPPED_START_TIME_OF_DAY : false};
+
   var textControllerDescription = TextEditingController();
   var textControllerName = TextEditingController();
 
-  TimeOfDay timeOfDayStart;
   TimeOfDay timeOfDayEnd;
+  var timeOfDayInitial = TimeOfDay(hour: 12, minute: 0);
+  TimeOfDay timeOfDayStart;
 
   double get timestampStart {
     return IBDateTime.dateWith(day: dayStart, timeOfDay: timeOfDayStart).millisecondsSinceEpoch/1000;
@@ -182,25 +187,25 @@ class IBStateWidgetEventCreate extends State<IBWidgetEventCreate> {
                       event != null ? IBLocalString.eventCreateEdit : IBLocalString.eventCreate,
                       style: TextStyle(
                           color: isCreateEnabled && (!isEditMode || isEditEnabled) ?
-                          isIcon1TappedDown ? IBColors.tappedDownLight : Colors.white :
+                          taps[IS_TAPPED_ACTION] ? IBColors.tappedDownLight : Colors.white :
                           IBColors.actionDisable,
                           fontSize: Theme.of(context).textTheme.title.fontSize,
                           fontWeight: Theme.of(context).textTheme.title.fontWeight
                       ),
                     ),
                     margin: EdgeInsets.only(
-                        right: spacingHorizontal
+                        right: SPACING_HORIZONTAL
                     ),
                   ),
                 ),
                 onTapCancel: () {
                   setState(() {
-                    isIcon1TappedDown = false;
+                    taps[IS_TAPPED_ACTION] = false;
                   });
                 },
                 onTapDown: (_) {
                   setState(() {
-                    isIcon1TappedDown = true;
+                    taps[IS_TAPPED_ACTION] = true;
                   });
                 },
                 onTapUp: (_) async {
@@ -208,6 +213,11 @@ class IBStateWidgetEventCreate extends State<IBWidgetEventCreate> {
                     isCreating = true;
                     await createEvent();
                     Navigator.pop(context);
+                  }
+                  if (!isCreating) {
+                    setState(() {
+                      taps[IS_TAPPED_ACTION] = false;
+                    });
                   }
                 }
             )
@@ -238,14 +248,14 @@ class IBStateWidgetEventCreate extends State<IBWidgetEventCreate> {
                           decoration: InputDecoration(
                               border: InputBorder.none,
                               contentPadding: EdgeInsets.only(
-                                top: spacingVertical,
+                                top: SPACING_VERTICAL,
                                 //                                  right: iconSize/2
                               ),
                               hintText: IBLocalString.eventCreateNameHint
                           ),
                           keyboardType: TextInputType.multiline,
-                          maxLines: linesMaxName,
-                          maxLength: lengthMaxName,
+                          maxLines: LINES_MAX_NAME,
+                          maxLength: LENGTH_MAX_NAME,
                           onChanged: (_) {
                             setState(() {
 
@@ -257,20 +267,20 @@ class IBStateWidgetEventCreate extends State<IBWidgetEventCreate> {
                           child: Container(
                             child: Icon(
                               Icons.done,
-                              color: textControllerName.text.trim().length >= lengthMinName ? IBColors.logo : Colors.grey,
-                              size: sizeIcon,
+                              color: textControllerName.text.trim().length >= LENGTH_MIN_NAME ? IBColors.logo : Colors.grey,
+                              size: SIZE_ICON,
                             ),
                             margin: EdgeInsets.only(
-                                top: spacingVertical/2
+                                top: SPACING_VERTICAL/2
                             ),
                           ),
                         )
                       ],
                     ),
                     margin: EdgeInsets.only(
-                      top: spacingVertical,
-                      left: spacingHorizontal,
-                      right: spacingHorizontal,
+                      top: SPACING_VERTICAL,
+                      left: SPACING_HORIZONTAL,
+                      right: SPACING_HORIZONTAL,
                     ),
                   ),
                   Container(
@@ -281,14 +291,14 @@ class IBStateWidgetEventCreate extends State<IBWidgetEventCreate> {
                           decoration: InputDecoration(
                               border: InputBorder.none,
                               contentPadding: EdgeInsets.only(
-                                top: spacingVertical,
+                                top: SPACING_VERTICAL,
 //                                  right: iconSize/2
                               ),
                               hintText: IBLocalString.eventCreateHintDescription
                           ),
                           keyboardType: TextInputType.multiline,
-                          maxLines: linesMaxDescription,
-                          maxLength: lengthMaxDescription,
+                          maxLines: LINES_MAX_DESCRIPTION,
+                          maxLength: LENGTH_MAX_DESCRIPTION,
                           onChanged: (_) {
                             setState(() {
 
@@ -300,28 +310,28 @@ class IBStateWidgetEventCreate extends State<IBWidgetEventCreate> {
                           child: Container(
                             child: Icon(
                               Icons.done,
-                              color: textControllerDescription.text.trim().length >= lengthMinDescription ? IBColors.logo : Colors.grey,
-                              size: sizeIcon,
+                              color: textControllerDescription.text.trim().length >= LENGTH_MIN_DESCRIPTION ? IBColors.logo : Colors.grey,
+                              size: SIZE_ICON,
                             ),
                             margin: EdgeInsets.only(
-                                top: spacingVertical/2
+                                top: SPACING_VERTICAL/2
                             ),
                           ),
                         )
                       ],
                     ),
                     margin: EdgeInsets.only(
-                      top: spacingVertical,
-                      left: spacingHorizontal,
-                      right: spacingHorizontal,
+                      top: SPACING_VERTICAL,
+                      left: SPACING_HORIZONTAL,
+                      right: SPACING_HORIZONTAL,
                     ),
                   ),
                   Container(
                     color: Colors.black26,
                     height: 0.5,
                     margin: EdgeInsets.only(
-                        top: spacingVertical,
-                        left: spacingHorizontal
+                        top: SPACING_VERTICAL,
+                        left: SPACING_HORIZONTAL
                     ),
                   ),
                   Container(
@@ -332,8 +342,8 @@ class IBStateWidgetEventCreate extends State<IBWidgetEventCreate> {
                       ),
                     ),
                     margin: EdgeInsets.symmetric(
-                        horizontal: spacingHorizontal,
-                        vertical: spacingVertical
+                        horizontal: SPACING_HORIZONTAL,
+                        vertical: SPACING_VERTICAL
                     ),
                   ),
                   Container(
@@ -343,25 +353,25 @@ class IBStateWidgetEventCreate extends State<IBWidgetEventCreate> {
                           child: Text(
                             placeSelected != null ? placeSelected.name : placePayload != null ? placePayload.name : IBLocalString.eventCreateSelectPlace,
                             style: TextStyle(
-                                color: isTappedPlace ? IBColors.logo : Colors.black,
+                                color: taps[IS_TAPPED_PLACE] ? IBColors.tappedDown : Colors.black,
                                 fontSize: 16.0
                             ),
                           ),
                           onTapCancel: () {
                             setState(() {
-                              isTappedPlace = false;
+                              taps[IS_TAPPED_PLACE] = false;
                             });
                           },
                           onTapDown: (_) {
                             setState(() {
-                              isTappedPlace = true;
+                              taps[IS_TAPPED_PLACE] = true;
                             });
                           },
                           onTapUp: (_) {
                             setState(() {
-                              isTappedPlace = false;
+                              taps[IS_TAPPED_PLACE] = false;
                             });
-                            IBWidgetApp.pushWidget(IBWidgetPlaceSearch(placeSelected: placeSelected, onSelect: (place) {
+                            IBWidgetApp.pushWidget(IBWidgetPlaceSelect(placeSelected: placeSelected, onSelect: (place) {
                               setState(() {
                                 this.placeSelected = place;
                               });
@@ -374,7 +384,7 @@ class IBStateWidgetEventCreate extends State<IBWidgetEventCreate> {
                             child: Icon(
                               Icons.done,
                               color: placeSelected != null || placePayload != null ? IBColors.logo : Colors.grey,
-                              size: sizeIcon,
+                              size: SIZE_ICON,
                             ),
                             margin: EdgeInsets.only(
                             ),
@@ -383,17 +393,17 @@ class IBStateWidgetEventCreate extends State<IBWidgetEventCreate> {
                       ],
                     ),
                     margin: EdgeInsets.only(
-                      top: spacingVertical,
-                      left: spacingHorizontal,
-                      right: spacingHorizontal,
+                      top: SPACING_VERTICAL,
+                      left: SPACING_HORIZONTAL,
+                      right: SPACING_HORIZONTAL,
                     ),
                   ),
                   Container(
                     color: Colors.black26,
                     height: 0.5,
                     margin: EdgeInsets.only(
-                        top: spacingVertical,
-                        left: spacingHorizontal
+                        top: SPACING_VERTICAL,
+                        left: SPACING_HORIZONTAL
                     ),
                   ),
                   Container(
@@ -404,8 +414,8 @@ class IBStateWidgetEventCreate extends State<IBWidgetEventCreate> {
                       ),
                     ),
                     margin: EdgeInsets.only(
-                        top: spacingHorizontal,
-                        left: spacingVertical
+                        top: SPACING_HORIZONTAL,
+                        left: SPACING_VERTICAL
                     ),
                   ),
                   Row(
@@ -418,8 +428,8 @@ class IBStateWidgetEventCreate extends State<IBWidgetEventCreate> {
                           ),
                         ),
                         margin: EdgeInsets.only(
-                          top: spacingVertical,
-                          left: spacingHorizontal,
+                          top: SPACING_VERTICAL,
+                          left: SPACING_HORIZONTAL,
                         ),
                       ),
                       GestureDetector(
@@ -429,7 +439,7 @@ class IBStateWidgetEventCreate extends State<IBWidgetEventCreate> {
                               Text(
                                 dayStart != null ? IBLocalString.eventCreateFormatDay(dayStart) : IBLocalString.eventCreateSelectDay,
                                 style: TextStyle(
-                                    color: isTappedStartDate ? IBColors.tappedDown : Colors.black,
+                                    color: taps[IS_TAPPED_START_DATE] ? IBColors.tappedDown : Colors.black,
                                     fontSize: 16.0
                                 ),
                               ),
@@ -439,35 +449,35 @@ class IBStateWidgetEventCreate extends State<IBWidgetEventCreate> {
                                   color: dayStart != null ? IBColors.logo : Colors.grey,
                                 ),
                                 margin: EdgeInsets.only(
-                                    left: spacingHorizontal/2
+                                    left: SPACING_HORIZONTAL/2
                                 ),
                               ),
                             ],
                           ),
                           margin: EdgeInsets.only(
-                            top: spacingVertical,
-                            left: spacingHorizontal,
+                            top: SPACING_VERTICAL,
+                            left: SPACING_HORIZONTAL,
                           ),
                         ),
                         onTapCancel: () {
                           setState(() {
-                            isTappedStartDate = false;
+                            taps[IS_TAPPED_START_DATE] = false;
                           });
                         },
                         onTapDown: (_) {
                           setState(() {
-                            isTappedStartDate = true;
+                            taps[IS_TAPPED_START_DATE] = true;
                           });
                         },
                         onTapUp: (_) async {
                           setState(() {
-                            isTappedStartDate = false;
+                            taps[IS_TAPPED_START_DATE] = false;
                           });
                           var datePicker = showDatePicker(
                             context: this.context,
                             initialDate: dayStart ?? IBDateTime.today,
                             firstDate: IBDateTime.today,
-                            lastDate: dayEnd ?? DateTime(IBDateTime.now.year, IBDateTime.now.month == 12 ? 1 : IBDateTime.now.month + 1, IBDateTime.now.day),
+                            lastDate: dayEnd ?? DateTime(IBDateTime.dateNow.year, IBDateTime.dateNow.month == 12 ? 1 : IBDateTime.dateNow.month + 1, IBDateTime.dateNow.day),
                             initialDatePickerMode: DatePickerMode.day,
                           );
                           var newDate = await datePicker;
@@ -483,7 +493,7 @@ class IBStateWidgetEventCreate extends State<IBWidgetEventCreate> {
                               Text(
                                 timeOfDayStart != null ? timeOfDayStart.format(context) : IBLocalString.eventCreateSelectTimeOfDay,
                                 style: TextStyle(
-                                    color: isTappedStartTimeOfDate ? IBColors.tappedDown : Colors.black,
+                                    color: taps[IS_TAPPED_START_TIME_OF_DAY] ? IBColors.tappedDown : Colors.black,
                                     fontSize: 16.0
                                 ),
                               ),
@@ -493,33 +503,33 @@ class IBStateWidgetEventCreate extends State<IBWidgetEventCreate> {
                                   color: timeOfDayStart != null ? IBColors.logo : Colors.grey,
                                 ),
                                 margin: EdgeInsets.only(
-                                    left: spacingHorizontal/2
+                                    left: SPACING_HORIZONTAL/2
                                 ),
                               ),
                             ],
                           ),
                           margin: EdgeInsets.only(
-                            top: spacingVertical,
-                            left: spacingHorizontal,
+                            top: SPACING_VERTICAL,
+                            left: SPACING_HORIZONTAL,
                           ),
                         ),
                         onTapCancel: () {
                           setState(() {
-                            isTappedStartTimeOfDate = false;
+                            taps[IS_TAPPED_START_TIME_OF_DAY] = false;
                           });
                         },
                         onTapDown: (_) {
                           setState(() {
-                            isTappedStartTimeOfDate = true;
+                            taps[IS_TAPPED_START_TIME_OF_DAY] = true;
                           });
                         },
                         onTapUp: (_) async {
                           setState(() {
-                            isTappedStartTimeOfDate = false;
+                            taps[IS_TAPPED_START_TIME_OF_DAY] = false;
                           });
                           var timePicker = showTimePicker(
                             context: this.context,
-                            initialTime: timeOfDayStart ?? TimeOfDay(hour: 12, minute: 0),
+                            initialTime: timeOfDayStart ?? timeOfDayInitial,
                           );
                           var newStartTimeOfDay = await timePicker;
                           setState(() {
@@ -539,8 +549,8 @@ class IBStateWidgetEventCreate extends State<IBWidgetEventCreate> {
                           ),
                         ),
                         margin: EdgeInsets.only(
-                          top: spacingVertical,
-                          left: spacingHorizontal,
+                          top: SPACING_VERTICAL,
+                          left: SPACING_HORIZONTAL,
                         ),
                       ),
                       GestureDetector(
@@ -550,7 +560,7 @@ class IBStateWidgetEventCreate extends State<IBWidgetEventCreate> {
                               Text(
                                 dayEnd != null ? IBLocalString.eventCreateFormatDay(dayEnd) : IBLocalString.eventCreateSelectDay,
                                 style: TextStyle(
-                                    color: isTappedEndDate ? IBColors.tappedDown : Colors.black,
+                                    color: taps[IS_TAPPED_END_DATE] ? IBColors.tappedDown : Colors.black,
                                     fontSize: 16.0
                                 ),
                               ),
@@ -560,35 +570,35 @@ class IBStateWidgetEventCreate extends State<IBWidgetEventCreate> {
                                   color: dayEnd != null ? IBColors.logo : Colors.grey,
                                 ),
                                 margin: EdgeInsets.only(
-                                    left: spacingHorizontal
+                                    left: SPACING_HORIZONTAL
                                 ),
                               ),
                             ],
                           ),
                           margin: EdgeInsets.only(
-                            top: spacingVertical,
-                            left: spacingHorizontal/2,
+                            top: SPACING_VERTICAL,
+                            left: SPACING_HORIZONTAL/2,
                           ),
                         ),
                         onTapCancel: () {
                           setState(() {
-                            isTappedEndDate = false;
+                            taps[IS_TAPPED_END_DATE] = false;
                           });
                         },
                         onTapDown: (_) {
                           setState(() {
-                            isTappedEndDate = true;
+                            taps[IS_TAPPED_END_DATE] = true;
                           });
                         },
                         onTapUp: (_) async {
                           setState(() {
-                            isTappedEndDate = false;
+                            taps[IS_TAPPED_END_DATE] = false;
                           });
                           var datePicker = showDatePicker(
                             context: this.context,
                             initialDate: dayEnd ?? dayStart ?? IBDateTime.today,
                             firstDate: dayStart ?? IBDateTime.today,
-                            lastDate: DateTime(IBDateTime.now.year, IBDateTime.now.month == 12 ? 1 : IBDateTime.now.month + 1, IBDateTime.now.day),
+                            lastDate: DateTime(IBDateTime.dateNow.year + 1, IBDateTime.dateNow.month, IBDateTime.dateNow.day),
                             initialDatePickerMode: DatePickerMode.day,
                           );
                           var newDate = await datePicker;
@@ -604,43 +614,43 @@ class IBStateWidgetEventCreate extends State<IBWidgetEventCreate> {
                               Text(
                                 timeOfDayEnd != null ? timeOfDayEnd.format(context) : IBLocalString.eventCreateSelectTimeOfDay,
                                 style: TextStyle(
-                                    color: isTappedEndTimeOfDate ? IBColors.tappedDown : Colors.black,
+                                    color: taps[IS_TAPPED_END_TIME_OF_DAY] ? IBColors.tappedDown : Colors.black,
                                     fontSize: 16.0
                                 ),
                               ),
                               Container(
                                 child: Icon(
                                   !isEndTimeOfDayValid ? Icons.clear : Icons.done,
-                                  color: timeOfDayEnd != null && isEndTimeOfDayValid ? IBColors.logo : Colors.red,
+                                  color: timeOfDayEnd != null ? isEndTimeOfDayValid ? IBColors.logo : Colors.red : Colors.grey,
                                 ),
                                 margin: EdgeInsets.only(
-                                    left: spacingHorizontal/2
+                                    left: SPACING_HORIZONTAL/2
                                 ),
                               ),
                             ],
                           ),
                           margin: EdgeInsets.only(
-                            top: spacingVertical,
-                            left: spacingHorizontal,
+                            top: SPACING_VERTICAL,
+                            left: SPACING_HORIZONTAL,
                           ),
                         ),
                         onTapCancel: () {
                           setState(() {
-                            isTappedEndTimeOfDate = false;
+                            taps[IS_TAPPED_END_TIME_OF_DAY] = false;
                           });
                         },
                         onTapDown: (_) {
                           setState(() {
-                            isTappedEndTimeOfDate = true;
+                            taps[IS_TAPPED_END_TIME_OF_DAY] = true;
                           });
                         },
                         onTapUp: (_) async {
                           setState(() {
-                            isTappedEndTimeOfDate = false;
+                            taps[IS_TAPPED_END_TIME_OF_DAY] = false;
                           });
                           var timePicker = showTimePicker(
                             context: this.context,
-                            initialTime: timeOfDayEnd ?? TimeOfDay(hour: 12, minute: 0),
+                            initialTime: timeOfDayEnd ?? timeOfDayInitial,
                           );
                           var newEndTimeOfDay = await timePicker;
                           setState(() {
@@ -654,8 +664,8 @@ class IBStateWidgetEventCreate extends State<IBWidgetEventCreate> {
                     color: Colors.black26,
                     height: 0.5,
                     margin: EdgeInsets.only(
-                        top: spacingHorizontal,
-                        left: spacingVertical
+                        top: SPACING_HORIZONTAL,
+                        left: SPACING_VERTICAL
                     ),
                   ),
                   PopupMenuButton<String>(
@@ -668,8 +678,9 @@ class IBStateWidgetEventCreate extends State<IBWidgetEventCreate> {
                           )
                       ),
                       margin: EdgeInsets.only(
-                          top: spacingHorizontal,
-                          left: spacingVertical
+                          top: SPACING_HORIZONTAL,
+                          left: SPACING_VERTICAL,
+                          bottom: SPACING_VERTICAL_EDGE,
                       ),
                     ),
                     onSelected: (value) {
@@ -679,9 +690,11 @@ class IBStateWidgetEventCreate extends State<IBWidgetEventCreate> {
                         });
                       }
                       else if (value == IBLocalString.eventCreateGroupCreate) {
-                        Navigator.push(context, MaterialPageRoute(builder: (context) => IBWidgetGroupCreate(onComplete: (group) {
+                        Navigator.push(context, MaterialPageRoute(builder: (context) => IBWidgetGroupCreate(onCreate: (group) {
+                          IBUserApp.current.idsGroups.add(group.id);
                           setState(() {
                             this.groupPayload = group;
+                            groupsPayloads = IBUserApp.current.idsGroups.map<IBFirestoreGroup>((id) => IBFirestoreGroup.firestore(id, IBFirestore.groupsPayloads[id])).toList();
                           });
                         })));
                       }
@@ -707,7 +720,7 @@ class IBStateWidgetEventCreate extends State<IBWidgetEventCreate> {
                                   color: IBColors.logo,
                                 ),
                                 margin: EdgeInsets.only(
-                                    left: spacingHorizontal
+                                    left: SPACING_HORIZONTAL
                                 ),
                               ) : Container()
                             ],
@@ -728,7 +741,7 @@ class IBStateWidgetEventCreate extends State<IBWidgetEventCreate> {
                                   color: IBColors.logo,
                                 ),
                                 margin: EdgeInsets.only(
-                                    left: spacingHorizontal
+                                    left: SPACING_HORIZONTAL
                                 ),
                               ) : Container()
                             ],
@@ -779,23 +792,23 @@ class IBStateWidgetEventCreate extends State<IBWidgetEventCreate> {
     if (isEditMode) {
       IBUserApp.current.idsFollowers.forEach((idUser) {
         var userPayload = IBFirestore.usersPayloads[idUser];
-        IBMessaging.send(event.name, IBLocalString.eventCreateMessageEditUserFollower(userPayload.codeLanguage ?? "es"), {IBFirestore.ID_EVENT : event.id}, userPayload.token);
+        IBMessaging.send(event.name, IBLocalString.eventCreateMessageEditUserFollower(userPayload.codeLanguage ?? "es"), {IBMessaging.ID_EVENT : event.id}, userPayload.token);
       });
     }
     else {
 
       IBUserApp.current.idsFollowers.forEach((idUser) {
         var userPayload = IBFirestore.usersPayloads[idUser];
-        IBMessaging.send(event.name, IBLocalString.eventCreateMessageUserFollower(IBUserApp.current.name, userPayload.codeLanguage ?? "es"), {IBFirestore.ID_EVENT : event.id}, userPayload.token);
+        IBMessaging.send(event.name, IBLocalString.eventCreateMessageUserFollower(IBUserApp.current.name, userPayload.codeLanguage ?? "es"), {IBMessaging.ID_EVENT : event.id}, userPayload.token);
       });
 
-      var placesPayloadsMessage = event.places.where((payload) => IBFirestorePlace.typesEventValid.contains(payload.type) || payload.isTypeCity);
+      var placesPayloadsMessage = event.places.where((payload) => IBFirestorePlace.typesPlacesEvent.contains(payload.type) || payload.isTypeCity);
 
       placesPayloadsMessage.forEach((payloadPlace) async {
         var place = await IBFirestore.getPlace(payloadPlace.id);
         place.idsFollowers.forEach((idUser) {
           var userPayload = IBFirestore.usersPayloads[idUser];
-          IBMessaging.send(event.name, IBLocalString.eventCreateMessagePlaceFollower(payloadPlace.name, userPayload.codeLanguage ?? "es"), {IBFirestore.ID_EVENT : event.id}, userPayload.token);
+          IBMessaging.send(event.name, IBLocalString.eventCreateMessagePlaceFollower(payloadPlace.name, userPayload.codeLanguage ?? "es"), {IBMessaging.ID_EVENT : event.id}, userPayload.token);
         });
       });
     }
@@ -814,7 +827,7 @@ class IBStateWidgetEventCreate extends State<IBWidgetEventCreate> {
 
     var geocodeCoordinates = await GoogleAPI.geocodeCoordinates(lon: placeSelected.lon, lat: placeSelected.lat);
     var geocodePlaces = geocodeCoordinates.map<IBFirestorePlace>((gPlace) => IBFirestorePlace.googlePlace(gPlace)).toList();
-    var includedPlaces = geocodePlaces.where((place) => IBFirestorePlace.typesEventsAdd.contains(place.type));
+    var includedPlaces = geocodePlaces.where((place) => IBFirestorePlace.typesPlacesEventAdd.contains(place.type));
     places.addAll(includedPlaces);
 
     var locality = geocodePlaces.where((place) => place.isTypeCity);

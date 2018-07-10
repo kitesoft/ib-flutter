@@ -22,12 +22,11 @@ class IBWidgetApp extends StatelessWidget {
 //      home: IBWidgetUserEvents(),
       home: IBWidgetEvents(),
       supportedLocales: [
-        const Locale(
-            'en'
-        ),
-        const Locale(
-            'es'
-        ),
+//        const Locale('de', ''), // German
+        const Locale('en', ''), // English
+//        const Locale('es', ''), // Spanish
+//        const Locale('fr', ''), // French
+//        const Locale('ru', ''), // Russian
       ],
     );
   }

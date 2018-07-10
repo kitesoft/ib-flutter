@@ -4,10 +4,6 @@ import 'package:intl/intl.dart';
 
 import 'package:ib/IBDateTime.dart';
 
-class IBLocalStringTuple<String> {
-  String type; String value;
-  IBLocalStringTuple({this.type, this.value});
-}
 
 class IBLocalString {
 
@@ -47,7 +43,7 @@ class IBLocalString {
   }
 
   static String get eventNoFollowers {
-    return isSpanish ? "Sin interesados todavia" : "No interested yet";
+    return isSpanish ? "Sin interesados todavia" : "No one interested yet";
   }
 
   static String eventFollowersCount(int count) {
@@ -326,11 +322,11 @@ class IBLocalString {
   }
 
   static String get eventCreateWhen {
-    return isSpanish ? "Donde?" : "When?";
+    return isSpanish ? "Cuando?" : "When?";
   }
 
   static String get eventCreateWhere {
-    return isSpanish ? "Cuándo?" : "Where?";
+    return isSpanish ? "Donde?" : "Where?";
   }
 
 
@@ -403,6 +399,14 @@ class IBLocalString {
 
   static String get groupCreateSearchMembers {
     return isSpanish ? "Busca usuarios para agregar" : "Search users to add";
+  }
+
+
+  // MESSAGE
+  // ...
+  // ...
+  static String get messageTitle {
+    return isSpanish ? "Notificacion" : "Notification";
   }
 
 

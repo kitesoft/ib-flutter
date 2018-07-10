@@ -3,11 +3,11 @@ import 'package:flutter/material.dart';
 
 class IBDateTime {
 
-  static DateTime get now => DateTime.now();
+  static DateTime get dateNow => DateTime.now();
 
-  static double get timestampNow => now.millisecondsSinceEpoch/1000;
+  static double get timestampNow => dateNow.millisecondsSinceEpoch/1000;
 
-  static DateTime get today => DateTime(now.year, now.month, now.day);
+  static DateTime get today => DateTime(dateNow.year, dateNow.month, dateNow.day);
 
   static bool timeOfDateIsAfter(TimeOfDay timeOfDay1, TimeOfDay timeOfDay2) => timeOfDay1.hour > timeOfDay2.hour || timeOfDay1.minute > timeOfDay2.minute;
 
